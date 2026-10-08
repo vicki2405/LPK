@@ -33,6 +33,10 @@
                             <PlusCircle class="w-4 h-4" />
                             <span>{{ isJapanese ? '+ クラスを開設' : '+ Buka Batch Baru' }}</span>
                         </Link>
+                        <Link :href="route('admin.database.index')" class="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold backdrop-blur-md border border-white/20 transition-all flex items-center gap-2 cursor-pointer" title="Kelola Database">
+                            <Database class="w-4 h-4 text-emerald-400" />
+                            <span>{{ isJapanese ? '💾 データベース' : '💾 Database' }}</span>
+                        </Link>
                     </div>
                 </div>
 
@@ -254,7 +258,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useLang } from '@/Composables/useLang';
 import { 
     Users, GraduationCap, Award, PlaneTakeoff, UserPlus, 
-    PlusCircle 
+    PlusCircle, Database
 } from 'lucide-vue-next';
 
 defineProps({

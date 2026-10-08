@@ -401,7 +401,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useLang } from '@/Composables/useLang';
@@ -426,15 +426,21 @@ const props = defineProps({
     programs: Array,
     jobSectors: Array,
     pipelineStages: Array,
+    languageLevels: Array,
     filters: Object,
 });
 
-const standardLanguageLevels = [
-    { code: 'N5', name: 'JLPT N5 (Tingkat Dasar)', name_jp: 'JLPT N5 (入門・基礎)' },
-    { code: 'N4', name: 'JLPT N4 & JFT-Basic A2 (Standar Kerja)', name_jp: 'JLPT N4 / JFT A2 (就労基準)' },
-    { code: 'N3', name: 'JLPT N3 (Tingkat Menengah)', name_jp: 'JLPT N3 (中級実用)' },
-    { code: 'N2', name: 'JLPT N2 (Tingkat Mahir / Karir)', name_jp: 'JLPT N2 (上級・ビジネス)' },
-];
+const standardLanguageLevels = computed(() => {
+    if (props.languageLevels && props.languageLevels.length > 0) {
+        return props.languageLevels;
+    }
+    return [
+        { code: 'N5', name: 'JLPT N5 (Tingkat Dasar)', name_jp: 'JLPT N5 (入門・基礎)' },
+        { code: 'N4', name: 'JLPT N4 & JFT-Basic A2 (Standar Kerja)', name_jp: 'JLPT N4 / JFT A2 (就労基準)' },
+        { code: 'N3', name: 'JLPT N3 (Tingkat Menengah)', name_jp: 'JLPT N3 (中級実用)' },
+        { code: 'N2', name: 'JLPT N2 (Tingkat Mahir / Karir)', name_jp: 'JLPT N2 (上級・ビジネス)' },
+    ];
+});
 
 const { isJapanese } = useLang();
 
@@ -510,7 +516,7 @@ const openCreateModal = () => {
     form.batch_id = props.batches?.[0]?.id || null;
     form.program_type = props.programs?.[0]?.name || 'Tokutei Ginou (SSW)';
     form.target_job_sector = props.jobSectors?.[0]?.name || 'Pengolahan Makanan & Minuman';
-    form.target_language_level = standardLanguageLevels[1].name;
+    form.target_language_level = standardLanguageLevels.value[1]?.name || standardLanguageLevels.value[0]?.name || '';
     form.pipeline_stage = props.pipelineStages?.[0]?.code || 'pelatihan';
     showModal.value = true;
 };
@@ -528,7 +534,7 @@ const openEditModal = (student) => {
     form.batch_id = student.batches?.[0]?.id || props.batches?.[0]?.id || null;
     form.program_type = student.program_type || props.programs?.[0]?.name || '';
     form.target_job_sector = student.target_job_sector || props.jobSectors?.[0]?.name || '';
-    form.target_language_level = student.target_language_level || standardLanguageLevels[1].name;
+    form.target_language_level = student.target_language_level || standardLanguageLevels.value[1]?.name || standardLanguageLevels.value[0]?.name || '';
     form.pipeline_stage = student.pipeline_stage || 'pelatihan';
     form.mcu_status = student.mcu_status || 'pending';
     form.coe_status = student.coe_status || 'pending';

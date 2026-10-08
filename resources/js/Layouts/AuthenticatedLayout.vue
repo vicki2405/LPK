@@ -133,6 +133,20 @@
                         </div>
                     </Link>
 
+                    <!-- Tingkat / Level Bahasa -->
+                    <Link :href="route('admin.master.language-levels.index')" prefetch cache-for="1m"
+                        class="group relative flex items-center gap-3 rounded-xl text-xs font-bold transition-colors"
+                        :class="[
+                            isSidebarCollapsed ? 'justify-center p-2.5' : 'px-3.5 py-2',
+                            route().current('admin.master.language-levels.*') ? 'bg-amber-50 text-amber-900 font-black' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
+                        ]">
+                        <Award class="w-4 h-4 shrink-0" :class="route().current('admin.master.language-levels.*') ? 'text-amber-600' : 'text-slate-500'" />
+                        <span v-if="!isSidebarCollapsed" class="truncate font-jp">{{ isJapanese ? '語学レベルマスタ' : 'Master Level Bahasa' }}</span>
+                        <div v-if="isSidebarCollapsed" class="pointer-events-none absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all z-50 shadow-xl font-jp">
+                            {{ isJapanese ? '語学レベルマスタ' : 'Master Level Bahasa' }}
+                        </div>
+                    </Link>
+
                     <!-- 2. MANAJEMEN SISWA & SENSEI -->
                     <div v-if="!isSidebarCollapsed" class="pt-4 pb-1 px-3 text-[11px] font-black uppercase tracking-wider text-slate-400 font-jp">
                         {{ isJapanese ? '実習生・指導員管理' : 'Manajemen Siswa & Sensei' }}
@@ -293,6 +307,25 @@
                             </Link>
                         </div>
                     </div>
+
+                    <!-- 5. DATABASE MANAGEMENT (BACKUP & RESTORE) -->
+                    <div v-if="!isSidebarCollapsed" class="pt-4 pb-1 px-3 text-[11px] font-black uppercase tracking-wider text-slate-400 font-jp">
+                        {{ isJapanese ? 'データベース管理' : 'Sistem & Database' }}
+                    </div>
+                    <div v-else class="w-6 h-px bg-slate-200 mx-auto my-3"></div>
+
+                    <Link :href="route('admin.database.index')" prefetch cache-for="30s"
+                        class="group relative flex items-center gap-3 rounded-xl text-xs font-bold transition-colors"
+                        :class="[
+                            isSidebarCollapsed ? 'justify-center p-2.5' : 'px-3.5 py-2.5',
+                            route().current('admin.database.*') ? 'bg-red-50 text-japan-red font-black' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
+                        ]">
+                        <Database class="w-4 h-4 shrink-0" :class="route().current('admin.database.*') ? 'text-japan-red' : 'text-slate-500'" />
+                        <span v-if="!isSidebarCollapsed" class="truncate font-jp">{{ isJapanese ? 'データベース' : 'Database' }}</span>
+                        <div v-if="isSidebarCollapsed" class="pointer-events-none absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all z-50 shadow-xl font-jp">
+                            {{ isJapanese ? 'データベース' : 'Database' }}
+                        </div>
+                    </Link>
                 </template>
 
                 <!-- ================= SENSEI NAVIGATION ================= -->
@@ -327,6 +360,20 @@
                         <span v-if="!isSidebarCollapsed" class="truncate">{{ isJapanese ? '単語・語彙管理' : 'Kotoba (Kosakata)' }}</span>
                         <div v-if="isSidebarCollapsed" class="pointer-events-none absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all z-50 shadow-xl font-jp">
                             {{ isJapanese ? '単語・語彙管理' : 'Kotoba (Kosakata)' }}
+                        </div>
+                    </Link>
+
+                    <!-- 2.5. Kanji (Bank Karakter) -->
+                    <Link :href="route('sensei.kanjis.index')" prefetch cache-for="1m"
+                        class="group relative flex items-center gap-3 rounded-xl text-xs font-bold transition-colors font-jp"
+                        :class="[
+                            isSidebarCollapsed ? 'justify-center p-2.5' : 'px-3.5 py-2.5',
+                            route().current('sensei.kanjis.*') ? 'bg-indigo-50 text-indigo-700 font-black' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
+                        ]">
+                        <Languages class="w-4 h-4 shrink-0" :class="route().current('sensei.kanjis.*') ? 'text-indigo-600' : 'text-slate-500'" />
+                        <span v-if="!isSidebarCollapsed" class="truncate">{{ isJapanese ? '漢字マスター' : 'Kanji' }}</span>
+                        <div v-if="isSidebarCollapsed" class="pointer-events-none absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all z-50 shadow-xl font-jp">
+                            {{ isJapanese ? '漢字マスター' : 'Kanji' }}
                         </div>
                     </Link>
 
@@ -454,6 +501,20 @@
                         <span v-if="!isSidebarCollapsed" class="truncate">{{ isJapanese ? '単語フラッシュカード' : 'Kotoba Flashcards' }}</span>
                         <div v-if="isSidebarCollapsed" class="pointer-events-none absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all z-50 shadow-xl font-jp">
                             {{ isJapanese ? '単語フラッシュカード' : 'Kotoba Flashcards' }}
+                        </div>
+                    </Link>
+
+                    <!-- 2.5. Kanji Flashcards (Kartu Huruf Kanji) -->
+                    <Link :href="route('siswa.kanjis.index')" prefetch cache-for="1m"
+                        class="group relative flex items-center gap-3 rounded-xl text-xs font-bold transition-colors font-jp"
+                        :class="[
+                            isSidebarCollapsed ? 'justify-center p-2.5' : 'px-3.5 py-2.5',
+                            route().current('siswa.kanjis.*') ? 'bg-indigo-50 text-indigo-700 font-black' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
+                        ]">
+                        <Languages class="w-4 h-4 shrink-0" :class="route().current('siswa.kanjis.*') ? 'text-indigo-600' : 'text-slate-500'" />
+                        <span v-if="!isSidebarCollapsed" class="truncate">{{ isJapanese ? '漢字カード' : 'Kanji' }}</span>
+                        <div v-if="isSidebarCollapsed" class="pointer-events-none absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all z-50 shadow-xl font-jp">
+                            {{ isJapanese ? '漢字カード' : 'Kanji' }}
                         </div>
                     </Link>
 
@@ -640,6 +701,17 @@
                                 </Link>
                             </div>
                         </div>
+
+                        <!-- Database Management (Mobile Drawer) -->
+                        <div class="pt-3 pb-1 px-3 text-[10px] font-black uppercase tracking-wider text-slate-400 font-jp">
+                            {{ isJapanese ? 'データベース管理' : 'Sistem & Database' }}
+                        </div>
+                        <Link :href="route('admin.database.index')" prefetch cache-for="30s" @click="showMobileDrawer = false"
+                            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors font-jp"
+                            :class="route().current('admin.database.*') ? 'bg-red-50 text-japan-red font-black' : 'text-slate-700 hover:bg-slate-100'">
+                            <Database class="w-4 h-4" :class="route().current('admin.database.*') ? 'text-japan-red' : 'text-slate-500'" />
+                            <span>{{ isJapanese ? 'データベース' : 'Database' }}</span>
+                        </Link>
                     </template>
 
                     <!-- ================= SENSEI NAVIGATION MOBILE DRAWER ================= -->
@@ -658,6 +730,12 @@
                             :class="route().current('sensei.vocabularies.*') ? 'bg-rose-50 text-rose-700 font-black' : 'text-slate-700 hover:bg-slate-100'">
                             <Layers class="w-4 h-4 text-slate-500" />
                             <span>{{ isJapanese ? '単語・語彙管理' : 'Kotoba (Kosakata)' }}</span>
+                        </Link>
+                        <Link :href="route('sensei.kanjis.index')" prefetch cache-for="1m" @click="showMobileDrawer = false"
+                            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors font-jp"
+                            :class="route().current('sensei.kanjis.*') ? 'bg-indigo-50 text-indigo-700 font-black' : 'text-slate-700 hover:bg-slate-100'">
+                            <Languages class="w-4 h-4 text-slate-500" />
+                            <span>{{ isJapanese ? '漢字マスター' : 'Kanji' }}</span>
                         </Link>
 
                         <!-- SOAL CBT Mobile Submenu -->
@@ -722,6 +800,12 @@
                             :class="route().current('siswa.flashcards.*') ? 'bg-amber-50 text-amber-700 font-black' : 'text-slate-700 hover:bg-slate-100'">
                             <Layers class="w-4 h-4 text-slate-500" />
                             <span>{{ isJapanese ? '単語フラッシュカード' : 'Kotoba Flashcards' }}</span>
+                        </Link>
+                        <Link :href="route('siswa.kanjis.index')" prefetch cache-for="1m" @click="showMobileDrawer = false"
+                            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors font-jp"
+                            :class="route().current('siswa.kanjis.*') ? 'bg-indigo-50 text-indigo-700 font-black' : 'text-slate-700 hover:bg-slate-100'">
+                            <Languages class="w-4 h-4 text-slate-500" />
+                            <span>{{ isJapanese ? '漢字カード' : 'Kanji' }}</span>
                         </Link>
                         <Link :href="route('siswa.exams.index')" prefetch cache-for="30s" @click="showMobileDrawer = false"
                             class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors"
@@ -984,7 +1068,9 @@ import {
     Camera,
     SlidersHorizontal,
     PanelLeftClose,
-    PanelLeftOpen
+    PanelLeftOpen,
+    Database,
+    Languages
 } from 'lucide-vue-next';
 
 const page = usePage();
@@ -1063,6 +1149,7 @@ const isDashboardActive = computed(() => {
 
 const currentBreadcrumbTitle = computed(() => {
     // Sensei Routes
+    if (route().current('sensei.kanjis.*')) return isJapanese.value ? '漢字マスター' : 'Bank Huruf & Kartu Kanji';
     if (route().current('sensei.vocabularies.*')) return isJapanese.value ? '単語・語彙管理' : 'Manajemen Kosakata (Kotoba)';
     if (route().current('sensei.lms.*')) return isJapanese.value ? '課別教材管理' : 'LMS Materi & Kurikulum';
     if (route().current('sensei.questions.*')) return isJapanese.value ? '問題一覧・登録' : 'Bank Soal CBT';
@@ -1086,6 +1173,7 @@ const currentBreadcrumbTitle = computed(() => {
 
     // Siswa Routes
     if (route().current('siswa.lms.*')) return isJapanese.value ? '課別テキスト' : 'Ruang Belajar LMS';
+    if (route().current('siswa.kanjis.*')) return isJapanese.value ? '漢字カード' : 'Kartu Belajar Kanji';
     if (route().current('siswa.flashcards.*')) return isJapanese.value ? '単語フラッシュカード' : 'Gym Kosakata Kotoba';
     if (route().current('siswa.exams.*') || route().current('siswa.cbt.*')) return isJapanese.value ? 'CBT模擬試験' : 'Simulasi Ujian CBT';
     if (route().current('siswa.journey.*')) return isJapanese.value ? 'ビザ・出国進捗' : 'Progres Visa & Penyaluran';

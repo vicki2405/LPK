@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\JobSector;
+use App\Models\LanguageLevel;
 use App\Models\PipelineStage;
 use App\Models\Program;
 use App\Models\User;
@@ -57,6 +58,7 @@ class StudentController extends Controller
         $programs = Program::where('is_active', true)->orderBy('sort_order', 'asc')->get();
         $jobSectors = JobSector::where('is_active', true)->orderBy('sort_order', 'asc')->get();
         $pipelineStages = PipelineStage::where('is_active', true)->orderBy('order_step', 'asc')->get();
+        $languageLevels = LanguageLevel::where('is_active', true)->orderBy('sort_order', 'asc')->get();
 
         return Inertia::render('Admin/Students/Index', [
             'students' => $students,
@@ -64,6 +66,7 @@ class StudentController extends Controller
             'programs' => $programs,
             'jobSectors' => $jobSectors,
             'pipelineStages' => $pipelineStages,
+            'languageLevels' => $languageLevels,
             'filters' => $request->only(['search', 'batch_id', 'program_type', 'target_job_sector', 'pipeline_stage']),
         ]);
     }

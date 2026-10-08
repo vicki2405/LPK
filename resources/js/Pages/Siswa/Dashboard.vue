@@ -60,7 +60,7 @@
                                         Kandidat Aktif
                                     </span>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-white/10 text-slate-300 border border-white/10">
-                                        {{ batch?.name || 'Batch 15 Kaigo' }}
+                                        {{ batch?.name || 'Siswa Mandiri' }}
                                     </span>
                                 </div>
 
@@ -86,6 +86,12 @@
                                     class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] sm:text-xs font-bold transition-all border border-amber-500/30"
                                 >
                                     <span>🃏 Flashcards Kotoba</span>
+                                </Link>
+                                <Link 
+                                    :href="route('siswa.kanjis.index')"
+                                    class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-[11px] sm:text-xs font-bold transition-all border border-indigo-500/30"
+                                >
+                                    <span>🈸 Kartu Kanji</span>
                                 </Link>
                                 <Link 
                                     :href="route('siswa.exams.index')"

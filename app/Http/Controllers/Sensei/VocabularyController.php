@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sensei;
 use App\Http\Controllers\Controller;
 use App\Models\Chapter;
 use App\Models\Course;
+use App\Models\LanguageLevel;
 use App\Models\Vocabulary;
 use App\Services\JapaneseDictionaryService;
 use Illuminate\Http\JsonResponse;
@@ -77,15 +78,7 @@ class VocabularyController extends Controller
 
         $courses = Course::orderBy('id', 'asc')->get(['id', 'title', 'level']);
 
-        $levels = [
-            'N5' => 'N5 (Tingkat Dasar / Minna I)',
-            'N4' => 'N4 (Standar Kerja / Minna II)',
-            'N3' => 'N3 (Menengah / Intermediate)',
-            'SSW_KAIGO' => 'SSW Kaigo (Perawat Lansia)',
-            'SSW_FOOD' => 'SSW Pengolahan Makanan & Restoran',
-            'SSW_AGRICULTURE' => 'SSW Pertanian & Peternakan',
-            'GENERAL' => 'Umum & Etika Kerja (Aisatsu/5S)',
-        ];
+        $levels = $this->getLevels();
 
         // Ambil kategori yang sudah pernah diinput + default preset
         $existingCategories = Vocabulary::whereNotNull('category')
@@ -180,15 +173,7 @@ class VocabularyController extends Controller
              ->orderBy('chapter_number', 'asc')
              ->get(['id', 'chapter_number', 'title', 'course_id']);
 
-         $levels = [
-             'N5' => 'N5 (Tingkat Dasar / Minna I)',
-             'N4' => 'N4 (Standar Kerja / Minna II)',
-             'N3' => 'N3 (Menengah / Intermediate)',
-             'SSW_KAIGO' => 'SSW Kaigo (Perawat Lansia)',
-             'SSW_FOOD' => 'SSW Pengolahan Makanan & Restoran',
-             'SSW_AGRICULTURE' => 'SSW Pertanian & Peternakan',
-             'GENERAL' => 'Umum & Etika Kerja (Aisatsu/5S)',
-         ];
+         $levels = $this->getLevels();
 
          return Inertia::render('Sensei/Vocabularies/Create', [
              'categories' => $categories,
@@ -337,15 +322,7 @@ class VocabularyController extends Controller
             ->orderBy('chapter_number', 'asc')
             ->get(['id', 'chapter_number', 'title', 'course_id']);
 
-        $levels = [
-            'N5' => 'N5 (Tingkat Dasar / Minna I)',
-            'N4' => 'N4 (Standar Kerja / Minna II)',
-            'N3' => 'N3 (Menengah / Intermediate)',
-            'SSW_KAIGO' => 'SSW Kaigo (Perawat Lansia)',
-            'SSW_FOOD' => 'SSW Pengolahan Makanan & Restoran',
-            'SSW_AGRICULTURE' => 'SSW Pertanian & Peternakan',
-            'GENERAL' => 'Umum & Etika Kerja (Aisatsu/5S)',
-        ];
+        $levels = $this->getLevels();
 
         return Inertia::render('Sensei/Vocabularies/Edit', [
             'vocabulary' => $vocabulary,
@@ -416,4 +393,29 @@ class VocabularyController extends Controller
 
         return redirect()->back()->with('success', "Kosakata 「{$hiragana}」 berhasil dihapus dari database!");
     }
+
+    /**
+     * Get active language levels from database with fallback.
+     */
+    private function getLevels(): array
+    {
+        $dbLevels = LanguageLevel::where('is_active', true)->orderBy('sort_order', 'asc')->get();
+        if ($dbLevels->isNotEmpty()) {
+            $levels = [];
+            foreach ($dbLevels as $lvl) {
+                $levels[$lvl->code] = $lvl->name;
+            }
+            return $levels;
+        }
+
+        return [
+            'N5' => 'JLPT N5 (Tingkat Dasar)',
+            'N4' => 'JLPT N4 & JFT-Basic A2 (Standar Kerja)',
+            'N3' => 'JLPT N3 (Tingkat Menengah)',
+            'N2' => 'JLPT N2 (Tingkat Mahir / Karir)',
+            'N1' => 'JLPT N1 (Tingkat Fasih / Native)',
+            'JFT_A2' => 'JFT-Basic A2 (SSW / Tokutei Ginou)',
+        ];
+    }
 }
+

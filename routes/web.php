@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\DatabaseBackupController;
 use App\Http\Controllers\Admin\JobSectorController;
+use App\Http\Controllers\Admin\LanguageLevelController;
 use App\Http\Controllers\Admin\LearningIndicatorController;
 use App\Http\Controllers\Admin\PipelineStageController;
 use App\Http\Controllers\Admin\ProgramController;
@@ -38,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('job-sectors', JobSectorController::class)->except(['create', 'edit', 'show']);
             Route::resource('pipeline-stages', PipelineStageController::class)->except(['create', 'edit', 'show']);
             Route::resource('learning-indicators', LearningIndicatorController::class)->except(['create', 'edit', 'show']);
+            Route::resource('language-levels', LanguageLevelController::class)->except(['create', 'edit', 'show']);
         });
 
         // 2. Manajemen Siswa & Sensei
@@ -71,6 +74,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('website-settings/hero-slides', [\App\Http\Controllers\Admin\WebsiteSettingController::class, 'storeHeroSlide'])->name('website-settings.hero-slides.store');
         Route::post('website-settings/hero-slides/{heroSlide}', [\App\Http\Controllers\Admin\WebsiteSettingController::class, 'updateHeroSlide'])->name('website-settings.hero-slides.update');
         Route::delete('website-settings/hero-slides/{heroSlide}', [\App\Http\Controllers\Admin\WebsiteSettingController::class, 'destroyHeroSlide'])->name('website-settings.hero-slides.destroy');
+
+        // 5. Database Management (Backup & Restore)
+        Route::get('database', [DatabaseBackupController::class, 'index'])->name('database.index');
+        Route::get('database/download', [DatabaseBackupController::class, 'download'])->name('database.download');
+        Route::post('database/restore', [DatabaseBackupController::class, 'restore'])->name('database.restore');
     });
 
     // ================= SENSEI PORTAL ROUTES =================
@@ -83,6 +91,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('vocabularies/pronunciation-audio', [VocabularyController::class, 'pronunciationAudio'])->name('vocabularies.pronunciation-audio');
         Route::post('vocabularies/generate-native-audio', [VocabularyController::class, 'generateNativeAudio'])->name('vocabularies.generate-native-audio');
         Route::resource('vocabularies', VocabularyController::class)->except(['show']);
+        
+        // 1.5. Kanji (Bank Huruf & Kartu Karakter)
+        Route::resource('kanjis', \App\Http\Controllers\Sensei\KanjiController::class)->except(['show']);
         
         // 2. Mata Pelajaran (Mapel) & Paket Soal CBT (Bank Soal)
         Route::post('subjects', [QuestionController::class, 'storeSubject'])->name('subjects.store');
@@ -141,6 +152,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // 2. Kotoba Flashcards & Quiz
         Route::get('flashcards', [\App\Http\Controllers\Siswa\FlashcardController::class, 'index'])->name('flashcards.index');
         Route::get('flashcards/pronunciation-audio', [VocabularyController::class, 'pronunciationAudio'])->name('flashcards.pronunciation-audio');
+
+        // 2.5. Kanji Flashcards (Kartu Huruf Kanji)
+        Route::get('kanji', [\App\Http\Controllers\Siswa\KanjiController::class, 'index'])->name('kanjis.index');
 
         // 3. CBT Ujian & Jadwal Siswa
         Route::get('exams', [\App\Http\Controllers\Siswa\ExamController::class, 'index'])->name('exams.index');
