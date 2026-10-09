@@ -73,22 +73,46 @@
                                     <p v-if="form.errors.level" class="text-xs text-rose-500 font-bold mt-1">{{ form.errors.level }}</p>
                                 </div>
 
-                                <!-- Kategori / Topik Kosakata -->
+                                <!-- Wadah Topik Kosakata -->
                                 <div>
                                     <label class="block text-xs font-bold text-slate-700 mb-1">
-                                        {{ isJapanese ? 'カテゴリ / テーマ *' : 'Kategori / Topik *' }}
+                                        {{ isJapanese ? 'トピックグループ *' : 'Wadah Topik Kosakata *' }}
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        v-model="form.category" 
-                                        list="categoryList"
-                                        required 
-                                        placeholder="Pilih atau ketik kategori..."
-                                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none transition-all shadow-2xs"
-                                    />
-                                    <datalist id="categoryList">
-                                        <option v-for="cat in categories" :key="cat" :value="cat" />
-                                    </datalist>
+                                    <div class="space-y-1">
+                                        <select 
+                                            v-if="availableTopics.length > 0 && !isManualTopic"
+                                            v-model="selectedTopicId" 
+                                            @change="handleTopicSelect"
+                                            required
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none transition-all cursor-pointer shadow-2xs"
+                                        >
+                                            <option value="">-- Pilih Wadah Topik --</option>
+                                            <option v-for="top in availableTopics" :key="top.id" :value="top.id">
+                                                {{ top.title }}
+                                            </option>
+                                        </select>
+                                        <input 
+                                            v-else
+                                            type="text" 
+                                            v-model="form.category" 
+                                            required 
+                                            placeholder="Ketik nama topik / kategori..."
+                                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-rose-500 focus:border-rose-500 focus:outline-none transition-all shadow-2xs"
+                                        />
+                                        <div class="flex items-center justify-between text-[11px] pt-0.5">
+                                            <button 
+                                                v-if="availableTopics.length > 0"
+                                                type="button" 
+                                                @click="toggleManualTopic"
+                                                class="text-rose-600 hover:underline font-bold"
+                                            >
+                                                {{ isManualTopic ? '← Pilih dari daftar topik yang ada' : '+ Ketik topik kustom baru' }}
+                                            </button>
+                                            <span v-else class="text-amber-600 font-medium text-[10px]">
+                                                Belum ada topik untuk level ini. Topik baru akan otomatis dibuat.
+                                            </span>
+                                        </div>
+                                    </div>
                                     <p v-if="form.errors.category" class="text-xs text-rose-500 font-bold mt-1">{{ form.errors.category }}</p>
                                 </div>
 
@@ -562,7 +586,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -592,6 +616,12 @@ import {
 const { isJapanese } = useLang();
 
 const props = defineProps({
+    topics: {
+        type: Array,
+        default: () => [],
+    },
+    defaultTopicId: [Number, String],
+    defaultLevel: String,
     categories: Array,
     wordTypes: Array,
     chapters: Array,
@@ -633,9 +663,42 @@ const translateSuccess = ref(false);
 const suggestions = ref([]);
 let translateTimer = null;
 
+const isManualTopic = ref(false);
+const selectedTopicId = ref(props.defaultTopicId ? Number(props.defaultTopicId) : '');
+
+const availableTopics = computed(() => {
+    if (!props.topics) return [];
+    return props.topics.filter(t => t.level === form.level);
+});
+
+const handleTopicSelect = () => {
+    if (selectedTopicId.value) {
+        const top = props.topics.find(t => t.id === Number(selectedTopicId.value));
+        if (top) {
+            form.topic_ids = [top.id];
+            form.category = top.title;
+        }
+    } else {
+        form.topic_ids = [];
+    }
+};
+
+const toggleManualTopic = () => {
+    isManualTopic.value = !isManualTopic.value;
+    if (isManualTopic.value) {
+        selectedTopicId.value = '';
+        form.topic_ids = [];
+        form.category = '';
+    } else if (availableTopics.value.length > 0) {
+        selectedTopicId.value = availableTopics.value[0].id;
+        handleTopicSelect();
+    }
+};
+
 const form = useForm({
-    level: 'N5',
-    category: 'Kehidupan Sehari-hari',
+    level: props.defaultLevel || 'N5',
+    category: '',
+    topic_ids: props.defaultTopicId ? [Number(props.defaultTopicId)] : [],
     word_type: 'Kata Benda',
     chapter_id: null,
     meaning_id: '',
@@ -818,6 +881,32 @@ const saveNativeAudioForCard = async () => {
         isSavingNativeAudio.value = false;
     }
 };
+
+// Initialize topic selection
+if (props.defaultTopicId && props.topics) {
+    const found = props.topics.find(t => String(t.id) === String(props.defaultTopicId));
+    if (found) {
+        selectedTopicId.value = found.id;
+        form.topic_ids = [found.id];
+        form.category = found.title;
+    }
+} else if (availableTopics.value.length > 0) {
+    selectedTopicId.value = availableTopics.value[0].id;
+    handleTopicSelect();
+}
+
+watch(() => form.level, () => {
+    const valid = availableTopics.value;
+    if (valid.length > 0) {
+        isManualTopic.value = false;
+        selectedTopicId.value = valid[0].id;
+        handleTopicSelect();
+    } else {
+        selectedTopicId.value = '';
+        form.topic_ids = [];
+        form.category = '';
+    }
+});
 
 const submitForm = () => {
     form.post(route('sensei.vocabularies.store'), {

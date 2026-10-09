@@ -51,11 +51,17 @@ class LanguageLevelController extends Controller
         ]);
 
         if (empty($validated['code'])) {
-            $baseCode = strtoupper(Str::slug($validated['name'], '_'));
-            $code = $baseCode ?: 'LVL';
+            // Ekstrak pola standar jika ada di nama (contoh: N5, N4, N3, N2, N1, JFT_A2, dsb)
+            if (preg_match('/\b(N[1-5]|JFT[_\-\s]?[A-C][1-2]?|[A-C][1-2])\b/i', $validated['name'], $matches)) {
+                $baseCode = strtoupper(preg_replace('/[^A-Za-z0-9]/', '_', $matches[0]));
+            } else {
+                $baseCode = strtoupper(Str::slug($validated['name'], '_'));
+            }
+            $baseCode = substr($baseCode ?: 'LVL', 0, 15);
+            $code = $baseCode;
             $counter = 1;
             while (LanguageLevel::where('code', $code)->exists()) {
-                $code = $baseCode . '_' . $counter++;
+                $code = substr($baseCode, 0, 15) . '_' . $counter++;
             }
             $validated['code'] = $code;
         } else {
@@ -78,7 +84,7 @@ class LanguageLevelController extends Controller
     public function update(Request $request, LanguageLevel $languageLevel): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:20', 'unique:language_levels,code,' . $languageLevel->id],
+            'code' => ['nullable', 'string', 'max:20', 'unique:language_levels,code,' . $languageLevel->id],
             'name' => ['required', 'string', 'max:255'],
             'name_jp' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -86,7 +92,11 @@ class LanguageLevelController extends Controller
             'is_active' => ['boolean'],
         ]);
 
-        $validated['code'] = strtoupper(trim($validated['code']));
+        if (empty($validated['code'])) {
+            $validated['code'] = $languageLevel->code;
+        } else {
+            $validated['code'] = strtoupper(trim($validated['code']));
+        }
 
         $languageLevel->update($validated);
 

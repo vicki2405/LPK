@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Kanji extends Model
 {
@@ -29,5 +30,17 @@ class Kanji extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    protected $appends = ['meaning'];
+
+    public function getMeaningAttribute(): string
+    {
+        return $this->meaning_id ?? '';
+    }
+
+    public function topics(): BelongsToMany
+    {
+        return $this->belongsToMany(Topic::class, 'kanji_topic')->withTimestamps();
     }
 }

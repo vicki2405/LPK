@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Chapter;
 use App\Models\Course;
 use App\Models\LanguageLevel;
+use App\Models\Topic;
 use App\Models\Vocabulary;
 use App\Services\JapaneseDictionaryService;
 use Illuminate\Http\JsonResponse;
@@ -17,11 +18,11 @@ use Inertia\Response;
 class VocabularyController extends Controller
 {
     /**
-     * Display listing of all vocabularies (Kotoba Manager).
+     * Display listing of all vocabularies (Kotoba Manager with Topic Grouping).
      */
     public function index(Request $request): Response
     {
-        $query = Vocabulary::with(['chapter.course'])->latest('id');
+        $query = Vocabulary::with(['chapter.course', 'topics'])->latest('id');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -36,8 +37,15 @@ class VocabularyController extends Controller
             });
         }
 
-        if ($request->filled('level')) {
+        if ($request->filled('level') && $request->level !== 'all') {
             $query->where('level', $request->level);
+        }
+
+        if ($request->filled('topic_id')) {
+            $topicId = $request->topic_id;
+            $query->whereHas('topics', function ($q) use ($topicId) {
+                $q->where('topics.id', $topicId);
+            });
         }
 
         if ($request->filled('category')) {
@@ -50,12 +58,6 @@ class VocabularyController extends Controller
             } else {
                 $query->where('chapter_id', $request->chapter_id);
             }
-        }
-
-        if ($request->filled('course_id')) {
-            $query->whereHas('chapter', function ($q) use ($request) {
-                $q->where('course_id', $request->course_id);
-            });
         }
 
         if ($request->filled('word_type')) {
@@ -80,7 +82,16 @@ class VocabularyController extends Controller
 
         $levels = $this->getLevels();
 
-        // Ambil kategori yang sudah pernah diinput + default preset
+        // Ambil daftar Topik Kosakata
+        $topics = Topic::forVocabulary()
+            ->withCount('vocabularies')
+            ->with(['vocabularies' => function ($q) {
+                $q->select('vocabularies.id', 'vocabularies.kanji', 'vocabularies.hiragana', 'vocabularies.romaji', 'vocabularies.meaning_id');
+            }])
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
         $existingCategories = Vocabulary::whereNotNull('category')
             ->where('category', '!=', '')
             ->distinct()
@@ -115,6 +126,7 @@ class VocabularyController extends Controller
 
         $stats = [
             'total_vocabularies' => Vocabulary::count(),
+            'total_topics' => $topics->count(),
             'total_with_audio' => Vocabulary::whereNotNull('audio_file')->count(),
             'total_n5' => Vocabulary::where('level', 'N5')->count(),
             'total_n4' => Vocabulary::where('level', 'N4')->count(),
@@ -124,77 +136,133 @@ class VocabularyController extends Controller
 
         return Inertia::render('Sensei/Vocabularies/Index', [
             'vocabularies' => $vocabularies,
+            'topics' => $topics,
             'chapters' => $chapters,
             'courses' => $courses,
             'levels' => $levels,
             'categories' => $categories,
             'wordTypes' => $wordTypes,
+            'filters' => $request->only(['search', 'level', 'topic_id', 'category', 'chapter_id', 'course_id', 'word_type', 'has_audio']),
             'stats' => $stats,
-            'filters' => $request->only(['search', 'level', 'category', 'chapter_id', 'course_id', 'word_type', 'has_audio']),
         ]);
+    }
+
+    /**
+     * Store a newly created topic for vocabulary.
+     */
+    public function storeTopic(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'level' => 'required|string|max:20',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+        ], [
+            'title.required' => 'Nama topik wajib diisi.',
+            'level.required' => 'Level bahasa wajib dipilih.',
+        ]);
+
+        $maxSort = Topic::forVocabulary()->where('level', $validated['level'])->max('sort_order') ?? 0;
+
+        Topic::create([
+            'type' => 'vocabulary',
+            'level' => $validated['level'],
+            'title' => trim($validated['title']),
+            'description' => $validated['description'] ? trim($validated['description']) : null,
+            'sort_order' => $maxSort + 1,
+            'created_by' => $request->user()?->id,
+        ]);
+
+        return redirect()->back()->with('success', "Topik [{$validated['title']}] berhasil dibuat!");
+    }
+
+    /**
+     * Update the specified topic.
+     */
+    public function updateTopic(Request $request, Topic $topic): RedirectResponse
+    {
+        $validated = $request->validate([
+            'level' => 'required|string|max:20',
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+        ], [
+            'title.required' => 'Nama topik wajib diisi.',
+            'level.required' => 'Level bahasa wajib dipilih.',
+        ]);
+
+        $topic->update([
+            'level' => $validated['level'],
+            'title' => trim($validated['title']),
+            'description' => $validated['description'] ? trim($validated['description']) : null,
+        ]);
+
+        return redirect()->back()->with('success', "Topik [{$topic->title}] berhasil diperbarui!");
+    }
+
+    /**
+     * Delete the specified topic.
+     */
+    public function destroyTopic(Topic $topic): RedirectResponse
+    {
+        $title = $topic->title;
+        $topic->delete();
+
+        return redirect()->back()->with('success', "Topik [{$title}] berhasil dihapus!");
     }
 
     /**
      * Show form for creating a new vocabulary.
      */
-     public function create(): Response
-     {
-         $existingCategories = Vocabulary::whereNotNull('category')
-             ->where('category', '!=', '')
-             ->distinct()
-             ->pluck('category')
-             ->toArray();
+    public function create(Request $request): Response
+    {
+        $chapters = Chapter::with('course:id,title,level')
+            ->orderBy('chapter_number', 'asc')
+            ->get(['id', 'chapter_number', 'title', 'course_id']);
 
-         $defaultCategories = [
-             'Kehidupan Sehari-hari',
-             'Pekerjaan & Pabrik',
-             'Restoran & Makanan',
-             'Medis & Rumah Sakit',
-             'Keluarga & Hubungan',
-             'Arah, Lokasi & Fasilitas',
-             'Kata Kerja Dasar',
-             'Kata Sifat & Perasaan',
-             'Salam & Ungkapan Kerja (Aisatsu)',
-         ];
+        $topics = Topic::forVocabulary()
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('title', 'asc')
+            ->get(['id', 'title', 'level']);
 
-         $categories = array_values(array_unique(array_merge($defaultCategories, $existingCategories)));
+        $wordTypes = [
+            'Kata Benda',
+            'Kata Kerja Golongan I',
+            'Kata Kerja Golongan II',
+            'Kata Kerja Golongan III',
+            'Kata Sifat-i',
+            'Kata Sifat-na',
+            'Kata Keterangan',
+            'Kata Sambung',
+            'Ungkapan / Salam',
+        ];
 
-         $wordTypes = [
-             'Kata Benda',
-             'Kata Kerja',
-             'Kata Sifat-i',
-             'Kata Sifat-na',
-             'Kata Keterangan',
-             'Kata Sambung',
-             'Ungkapan / Salam',
-         ];
+        $levels = $this->getLevels();
 
-         $chapters = Chapter::with('course:id,title,level')
-             ->orderBy('chapter_number', 'asc')
-             ->get(['id', 'chapter_number', 'title', 'course_id']);
-
-         $levels = $this->getLevels();
-
-         return Inertia::render('Sensei/Vocabularies/Create', [
-             'categories' => $categories,
-             'wordTypes' => $wordTypes,
-             'chapters' => $chapters,
-             'levels' => $levels,
-         ]);
-     }
+        return Inertia::render('Sensei/Vocabularies/Create', [
+            'chapters' => $chapters,
+            'topics' => $topics,
+            'defaultTopicId' => $request->query('topic_id'),
+            'defaultLevel' => $request->query('level', 'N5'),
+            'wordTypes' => $wordTypes,
+            'levels' => $levels,
+        ]);
+    }
 
     /**
-     * Auto translate / lookup Japanese words based on Indonesian term.
+     * Auto translate Indonesian meaning to Japanese kanji, hiragana, romaji.
      */
     public function autoTranslate(Request $request, JapaneseDictionaryService $dictService): JsonResponse
     {
-        $term = $request->input('meaning', '');
-        $result = $dictService->search($term);
+        $meaning = $request->input('meaning', '');
+        if (empty($meaning)) {
+            return response()->json(['found' => false, 'message' => 'Teks arti diperlukan.'], 400);
+        }
+
+        $result = $dictService->translateIndonesianToJapanese($meaning);
         return response()->json($result);
     }
 
     /**
-     * Stream authentic Japanese pronunciation MP3 audio binary.
+     * Stream real Japanese native pronunciation audio via server proxy.
      */
     public function pronunciationAudio(Request $request, JapaneseDictionaryService $dictService)
     {
@@ -245,6 +313,8 @@ class VocabularyController extends Controller
         $validated = $request->validate([
             'level' => 'nullable|string|max:50',
             'category' => 'nullable|string|max:100',
+            'topic_ids' => 'nullable|array',
+            'topic_ids.*' => 'exists:topics,id',
             'chapter_id' => 'nullable',
             'kanji' => 'nullable|string|max:100',
             'hiragana' => 'required|string|max:100',
@@ -262,10 +332,6 @@ class VocabularyController extends Controller
         $validated['level'] = $request->input('level') ?: 'N5';
         $validated['word_type'] = $request->input('word_type') ?: 'Kata Benda';
 
-        if (empty($validated['category'])) {
-            $validated['category'] = 'Umum / Sehari-hari';
-        }
-
         if ($request->hasFile('image_file')) {
             $path = $request->file('image_file')->store('lms/vocab_images', 'public');
             $validated['image_file'] = '/storage/' . $path;
@@ -278,9 +344,26 @@ class VocabularyController extends Controller
             $validated['audio_file'] = $request->input('generated_audio_url');
         }
 
+        // Simpan topik primer sebagai kategori jika ada
+        if (!empty($validated['topic_ids'])) {
+            $firstTopic = Topic::find($validated['topic_ids'][0]);
+            if ($firstTopic) {
+                $validated['category'] = $firstTopic->title;
+                $validated['level'] = $firstTopic->level;
+            }
+        }
+
+        if (empty($validated['category'])) {
+            $validated['category'] = 'Umum / Sehari-hari';
+        }
+
         $vocab = Vocabulary::create($validated);
 
-        return redirect()->route('sensei.vocabularies.index')->with('success', "Kosakata 「{$vocab->hiragana}」 ({$vocab->meaning_id}) berhasil ditambahkan!");
+        if (!empty($validated['topic_ids'])) {
+            $vocab->topics()->sync($validated['topic_ids']);
+        }
+
+        return redirect()->route('sensei.vocabularies.index')->with('success', "Kosakata [{$vocab->hiragana}] ({$vocab->meaning_id}) berhasil ditambahkan!");
     }
 
     /**
@@ -288,29 +371,22 @@ class VocabularyController extends Controller
      */
     public function edit(Vocabulary $vocabulary): Response
     {
-        $existingCategories = Vocabulary::whereNotNull('category')
-            ->where('category', '!=', '')
-            ->distinct()
-            ->pluck('category')
-            ->toArray();
+        $vocabulary->load('topics');
 
-        $defaultCategories = [
-            'Kehidupan Sehari-hari',
-            'Pekerjaan & Pabrik',
-            'Restoran & Makanan',
-            'Medis & Rumah Sakit',
-            'Keluarga & Hubungan',
-            'Arah, Lokasi & Fasilitas',
-            'Kata Kerja Dasar',
-            'Kata Sifat & Perasaan',
-            'Salam & Ungkapan Kerja (Aisatsu)',
-        ];
+        $chapters = Chapter::with('course:id,title,level')
+            ->orderBy('chapter_number', 'asc')
+            ->get(['id', 'chapter_number', 'title', 'course_id']);
 
-        $categories = array_values(array_unique(array_merge($defaultCategories, $existingCategories)));
+        $topics = Topic::forVocabulary()
+            ->orderBy('sort_order', 'asc')
+            ->orderBy('title', 'asc')
+            ->get(['id', 'title', 'level']);
 
         $wordTypes = [
             'Kata Benda',
-            'Kata Kerja',
+            'Kata Kerja Golongan I',
+            'Kata Kerja Golongan II',
+            'Kata Kerja Golongan III',
             'Kata Sifat-i',
             'Kata Sifat-na',
             'Kata Keterangan',
@@ -318,15 +394,12 @@ class VocabularyController extends Controller
             'Ungkapan / Salam',
         ];
 
-        $chapters = Chapter::with('course:id,title,level')
-            ->orderBy('chapter_number', 'asc')
-            ->get(['id', 'chapter_number', 'title', 'course_id']);
-
         $levels = $this->getLevels();
 
         return Inertia::render('Sensei/Vocabularies/Edit', [
             'vocabulary' => $vocabulary,
-            'categories' => $categories,
+            'topics' => $topics,
+            'selectedTopicIds' => $vocabulary->topics->pluck('id')->toArray(),
             'wordTypes' => $wordTypes,
             'chapters' => $chapters,
             'levels' => $levels,
@@ -341,6 +414,8 @@ class VocabularyController extends Controller
         $validated = $request->validate([
             'level' => 'nullable|string|max:50',
             'category' => 'nullable|string|max:100',
+            'topic_ids' => 'nullable|array',
+            'topic_ids.*' => 'exists:topics,id',
             'chapter_id' => 'nullable',
             'kanji' => 'nullable|string|max:100',
             'hiragana' => 'required|string|max:100',
@@ -358,10 +433,6 @@ class VocabularyController extends Controller
         $validated['level'] = $request->input('level') ?: ($vocabulary->level ?: 'N5');
         $validated['word_type'] = $request->input('word_type') ?: ($vocabulary->word_type ?: 'Kata Benda');
 
-        if (empty($validated['category'])) {
-            $validated['category'] = 'Umum / Sehari-hari';
-        }
-
         if ($request->hasFile('image_file')) {
             $path = $request->file('image_file')->store('lms/vocab_images', 'public');
             $validated['image_file'] = '/storage/' . $path;
@@ -378,9 +449,24 @@ class VocabularyController extends Controller
             unset($validated['audio_file']);
         }
 
+        if (!empty($validated['topic_ids'])) {
+            $firstTopic = Topic::find($validated['topic_ids'][0]);
+            if ($firstTopic) {
+                $validated['category'] = $firstTopic->title;
+                $validated['level'] = $firstTopic->level;
+            }
+            $vocabulary->topics()->sync($validated['topic_ids']);
+        } else {
+            $vocabulary->topics()->detach();
+        }
+
+        if (empty($validated['category'])) {
+            $validated['category'] = 'Umum / Sehari-hari';
+        }
+
         $vocabulary->update($validated);
 
-        return redirect()->route('sensei.vocabularies.index')->with('success', "Kosakata 「{$vocabulary->hiragana}」 berhasil diperbarui!");
+        return redirect()->route('sensei.vocabularies.index')->with('success', "Kosakata [{$vocabulary->hiragana}] berhasil diperbarui!");
     }
 
     /**
@@ -389,9 +475,10 @@ class VocabularyController extends Controller
     public function destroy(Vocabulary $vocabulary): RedirectResponse
     {
         $hiragana = $vocabulary->hiragana;
+        $vocabulary->topics()->detach();
         $vocabulary->delete();
 
-        return redirect()->back()->with('success', "Kosakata 「{$hiragana}」 berhasil dihapus dari database!");
+        return redirect()->back()->with('success', "Kosakata [{$hiragana}] berhasil dihapus dari database!");
     }
 
     /**
@@ -418,4 +505,3 @@ class VocabularyController extends Controller
         ];
     }
 }
-

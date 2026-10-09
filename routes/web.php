@@ -87,12 +87,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // 1. LMS (Materi & Kurikulum)
         Route::resource('lms', LmsController::class)->except(['create', 'edit']);
+        Route::post('vocabularies/topics', [VocabularyController::class, 'storeTopic'])->name('vocabularies.topics.store');
+        Route::put('vocabularies/topics/{topic}', [VocabularyController::class, 'updateTopic'])->name('vocabularies.topics.update');
+        Route::delete('vocabularies/topics/{topic}', [VocabularyController::class, 'destroyTopic'])->name('vocabularies.topics.destroy');
         Route::post('vocabularies/auto-translate', [VocabularyController::class, 'autoTranslate'])->name('vocabularies.auto-translate');
         Route::get('vocabularies/pronunciation-audio', [VocabularyController::class, 'pronunciationAudio'])->name('vocabularies.pronunciation-audio');
         Route::post('vocabularies/generate-native-audio', [VocabularyController::class, 'generateNativeAudio'])->name('vocabularies.generate-native-audio');
         Route::resource('vocabularies', VocabularyController::class)->except(['show']);
         
         // 1.5. Kanji (Bank Huruf & Kartu Karakter)
+        Route::post('kanjis/topics', [\App\Http\Controllers\Sensei\KanjiController::class, 'storeTopic'])->name('kanjis.topics.store');
+        Route::put('kanjis/topics/{topic}', [\App\Http\Controllers\Sensei\KanjiController::class, 'updateTopic'])->name('kanjis.topics.update');
+        Route::delete('kanjis/topics/{topic}', [\App\Http\Controllers\Sensei\KanjiController::class, 'destroyTopic'])->name('kanjis.topics.destroy');
         Route::resource('kanjis', \App\Http\Controllers\Sensei\KanjiController::class)->except(['show']);
         
         // 2. Mata Pelajaran (Mapel) & Paket Soal CBT (Bank Soal)

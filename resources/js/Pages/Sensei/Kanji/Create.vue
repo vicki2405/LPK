@@ -107,6 +107,27 @@
                         </div>
                     </div>
 
+                    <!-- Wadah Topik Kanji -->
+                    <div>
+                        <label class="block text-xs font-black text-slate-700 mb-1.5 uppercase tracking-wider font-jp">
+                            {{ isJapanese ? '漢字トピック *' : 'Wadah Topik Kanji' }}
+                        </label>
+                        <select 
+                            v-if="availableTopics.length > 0"
+                            v-model="selectedTopicId"
+                            @change="handleTopicSelect"
+                            class="w-full px-4 py-3 rounded-2xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50/40 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all cursor-pointer"
+                        >
+                            <option value="">-- Tanpa Topik Khusus (Bank Kanji Umum) --</option>
+                            <option v-for="top in availableTopics" :key="top.id" :value="top.id">
+                                [{{ top.level }}] {{ top.title }}
+                            </option>
+                        </select>
+                        <div v-else class="text-xs text-slate-400 py-1 font-medium">
+                            Belum ada topik khusus untuk level ini. Kanji akan dimasukkan ke bank umum level {{ form.level }}.
+                        </div>
+                    </div>
+
                     <!-- Row 2: Cara Baca Hiragana & Romaji -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -206,7 +227,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useLang } from '@/Composables/useLang';
@@ -217,6 +238,12 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    topics: {
+        type: Array,
+        default: () => [],
+    },
+    defaultTopicId: [Number, String],
+    defaultLevel: String,
 });
 
 const { isJapanese } = useLang();
@@ -232,14 +259,48 @@ const activeLanguageLevels = computed(() => {
     ];
 });
 
+const selectedTopicId = ref(props.defaultTopicId ? Number(props.defaultTopicId) : '');
+
+const availableTopics = computed(() => {
+    if (!props.topics) return [];
+    return props.topics.filter(t => t.level === form.level);
+});
+
+const handleTopicSelect = () => {
+    if (selectedTopicId.value) {
+        form.topic_ids = [Number(selectedTopicId.value)];
+    } else {
+        form.topic_ids = [];
+    }
+};
+
 const form = useForm({
     kanji: '',
     hiragana: '',
     romaji: '',
     meaning_id: '',
-    level: activeLanguageLevels.value[0]?.code || 'N5',
+    level: props.defaultLevel || activeLanguageLevels.value[0]?.code || 'N5',
+    topic_ids: props.defaultTopicId ? [Number(props.defaultTopicId)] : [],
     stroke_count: null,
     notes: '',
+});
+
+if (props.defaultTopicId && props.topics) {
+    handleTopicSelect();
+}
+
+watch(() => form.level, () => {
+    const valid = availableTopics.value;
+    if (valid.length > 0) {
+        const exists = valid.find(t => t.id === Number(selectedTopicId.value));
+        if (!exists) {
+            selectedTopicId.value = valid[0].id;
+            handleTopicSelect();
+        }
+    } else {
+        selectedTopicId.value = '';
+        form.topic_ids = [];
+    }
 });
 
 const submitForm = () => {

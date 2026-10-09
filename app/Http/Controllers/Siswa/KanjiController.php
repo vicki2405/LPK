@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\Kanji;
 use App\Models\LanguageLevel;
+use App\Models\Topic;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -12,7 +13,7 @@ use Inertia\Response;
 class KanjiController extends Controller
 {
     /**
-     * Display student interactive Kanji Flashcard Gym & Quiz Hub.
+     * Display student interactive Kanji Flashcard Gym & Quiz Hub with Topic Grouping.
      */
     public function index(Request $request): Response
     {
@@ -31,24 +32,45 @@ class KanjiController extends Controller
             ];
         }
 
-        $selectedLevel = $request->input('level', 'ALL');
+        $selectedLevel = $request->input('level', 'N5');
+        if ($selectedLevel !== 'ALL' && !isset($levels[$selectedLevel])) {
+            $selectedLevel = array_keys($levels)[1] ?? 'ALL';
+        }
 
-        $query = Kanji::query()->orderBy('id', 'asc');
+        $selectedTopicId = $request->input('topic_id');
+
+        // Ambil daftar Topik Kanji per Level
+        $topicsQuery = Topic::forKanji()->withCount('kanjis')->orderBy('sort_order', 'asc');
+        if ($selectedLevel && $selectedLevel !== 'ALL') {
+            $topicsQuery->where('level', $selectedLevel);
+        }
+        $topics = $topicsQuery->get();
+
+        $query = Kanji::query()->with('topics')->orderBy('id', 'asc');
 
         if ($selectedLevel && $selectedLevel !== 'ALL') {
             $query->where('level', $selectedLevel);
+        }
+
+        if ($selectedTopicId && $selectedTopicId !== 'all') {
+            $query->whereHas('topics', function ($q) use ($selectedTopicId) {
+                $q->where('topics.id', $selectedTopicId);
+            });
         }
 
         $kanjis = $query->get();
 
         $stats = [
             'total' => Kanji::count(),
+            'total_topics' => $topics->count(),
             'total_n5' => Kanji::where('level', 'N5')->count(),
             'total_n4' => Kanji::where('level', 'N4')->count(),
         ];
 
         return Inertia::render('Siswa/Kanji/Index', [
             'levels' => $levels,
+            'topics' => $topics,
+            'selectedTopicId' => $selectedTopicId ? (int)$selectedTopicId : null,
             'selectedLevel' => $selectedLevel,
             'kanjis' => $kanjis,
             'stats' => $stats,

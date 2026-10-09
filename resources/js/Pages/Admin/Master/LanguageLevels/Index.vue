@@ -1,60 +1,52 @@
-<template>
-    <Head :title="isJapanese ? '語学レベルマスタ - 正夢' : 'Master Tingkat & Level Bahasa - Masayume'" />
-
+﻿<template>
     <AuthenticatedLayout>
-        <div class="space-y-6 animate-fade-in">
-            <!-- Top Header Action -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs">
-                <div>
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-800 text-xs font-semibold mb-2 border border-indigo-200/60 font-jp">
-                        <Award class="w-3.5 h-3.5 text-indigo-600" />
-                        <span>{{ isJapanese ? 'マスタ設定・語学基準' : 'Pengaturan Standar Level Terpusat' }}</span>
+        <Head :title="isJapanese ? '言語レベル設定' : 'Master Level Bahasa'" />
+
+        <div class="py-6 sm:py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <!-- Header Section -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-44 h-44 bg-red-50 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-japan-red border border-red-100 rounded-full text-xs font-black tracking-widest uppercase mb-3 font-jp">
+                        <Award class="w-3.5 h-3.5" />
+                        <span>{{ isJapanese ? 'マスターデータ管理' : 'Master Data' }}</span>
                     </div>
-                    <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-                        <Award class="w-6 h-6 text-japan-red" />
-                        <span>{{ isJapanese ? '語学レベルマスタ' : 'Master Tingkat & Level Bahasa' }}</span>
+                    <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3 font-jp">
+                        <span>{{ isJapanese ? '日本語・語学レベル設定' : 'Tingkat Kemampuan Bahasa' }}</span>
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-mono font-bold">
+                            {{ languageLevels.length }} Level
+                        </span>
                     </h1>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
                         {{ isJapanese 
-                            ? 'JLPT（N5〜N1）、JFT-Basic A2、特定技能（SSW）など、システム全体で共通利用する公式言語レベルを統括管理します。' 
-                            : 'Kelola acuan tingkat bahasa resmi (JLPT N5 s/d N1, JFT-Basic A2, SSW) sebagai Single Source of Truth yang tersinkronisasi ke Data Siswa, Kanji, Kotoba, dan Ujian CBT.' 
+                            ? 'システム全体の日本語基準レベル（JLPT N5〜N1、JFTなど）を管理します。Kanji、Kotoba、実習生データに反映されます。' 
+                            : 'Kelola acuan tingkat bahasa Jepang (JLPT N5-N1, JFT-Basic, dll) untuk standarisasi modul Kartu Kanji, Kosakata, dan kualifikasi Siswa.' 
                         }}
                     </p>
                 </div>
 
-                <button 
-                    type="button"
-                    @click="openCreateModal"
-                    class="px-5 py-2.5 rounded-xl bg-japan-red hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-japan-red/20 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer self-start sm:self-auto group"
-                >
-                    <PlusCircle class="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
-                    <span>{{ isJapanese ? '+ 新規レベル追加' : '+ Tambah Level Baru' }}</span>
-                </button>
+                <div class="relative z-10 flex items-center gap-3">
+                    <button 
+                        type="button" 
+                        @click="openCreateModal"
+                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-japan-red hover:bg-red-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-japan-red/20 active:scale-[0.98] transition-all cursor-pointer font-jp"
+                    >
+                        <PlusCircle class="w-4 h-4" />
+                        <span>{{ isJapanese ? 'レベルを追加' : 'Tambah Level Baru' }}</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- Stats Summary -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
                     <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider font-jp">
-                            {{ isJapanese ? '総レベル数' : 'Total Level' }}
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-jp">
+                            {{ isJapanese ? '有効なレベル' : 'Level Aktif' }}
                         </span>
                         <span class="text-lg sm:text-2xl font-black text-slate-900 mt-0.5 block font-mono">
-                            {{ languageLevels.length }}
-                        </span>
-                    </div>
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                        <Award class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider font-jp">
-                            {{ isJapanese ? '有効レベル' : 'Level Aktif' }}
-                        </span>
-                        <span class="text-lg sm:text-2xl font-black text-emerald-600 mt-0.5 block font-mono">
-                            {{ activeCount }}
+                            {{ activeCount }} / {{ languageLevels.length }}
                         </span>
                     </div>
                     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
@@ -62,10 +54,10 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
                     <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider font-jp">
-                            {{ isJapanese ? '漢字への適用' : 'Terkait di Kanji' }}
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-jp">
+                            {{ isJapanese ? '登録漢字総数' : 'Total Huruf Kanji Terkait' }}
                         </span>
                         <span class="text-lg sm:text-2xl font-black text-blue-600 mt-0.5 block font-mono">
                             {{ totalKanjisLinked }}
@@ -76,9 +68,9 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
                     <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider font-jp">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider font-jp">
                             {{ isJapanese ? '実習生ターゲット' : 'Target Siswa' }}
                         </span>
                         <span class="text-lg sm:text-2xl font-black text-amber-600 mt-0.5 block font-mono">
@@ -188,40 +180,34 @@
                 </div>
 
                 <form @submit.prevent="submitForm" class="space-y-4">
-                    <div class="grid grid-cols-3 gap-3">
+                    <!-- Info Kode Level saat Edit Mode (Read-only) -->
+                    <div v-if="isEditing" class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between">
                         <div>
-                            <label class="block text-[11px] font-black text-slate-700 mb-1 uppercase tracking-wider font-jp">
-                                Kode *
-                            </label>
-                            <input 
-                                type="text" 
-                                v-model="form.code" 
-                                placeholder="Misal: N5" 
-                                required
-                                class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono font-bold text-slate-900 uppercase focus:ring-2 focus:ring-japan-red focus:border-japan-red focus:outline-none"
-                                :class="form.errors.code ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'"
-                            />
-                            <span v-if="form.errors.code" class="text-[10px] text-rose-600 font-bold mt-1 block">
-                                {{ form.errors.code }}
-                            </span>
+                            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block font-jp">Kode Level Sistem</span>
+                            <span class="text-xs font-mono font-black text-slate-800">{{ form.code }}</span>
                         </div>
+                        <span class="text-[11px] text-slate-400 font-jp">Kode sistem tersinkronisasi</span>
+                    </div>
 
-                        <div class="col-span-2">
-                            <label class="block text-[11px] font-black text-slate-700 mb-1 uppercase tracking-wider font-jp">
-                                Nama Level *
-                            </label>
-                            <input 
-                                type="text" 
-                                v-model="form.name" 
-                                placeholder="Contoh: JLPT N5 (Tingkat Dasar)" 
-                                required
-                                class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-bold text-slate-900 focus:ring-2 focus:ring-japan-red focus:border-japan-red focus:outline-none"
-                                :class="form.errors.name ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'"
-                            />
-                            <span v-if="form.errors.name" class="text-[10px] text-rose-600 font-bold mt-1 block">
-                                {{ form.errors.name }}
-                            </span>
-                        </div>
+                    <!-- Input Nama Level (Full Width saat Tambah Baru) -->
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-700 mb-1 uppercase tracking-wider font-jp">
+                            Nama Level *
+                        </label>
+                        <input 
+                            type="text" 
+                            v-model="form.name" 
+                            placeholder="Contoh: JLPT N5 (Tingkat Dasar)" 
+                            required
+                            class="w-full px-3.5 py-2.5 rounded-xl border text-xs font-bold text-slate-900 focus:ring-2 focus:ring-japan-red focus:border-japan-red focus:outline-none"
+                            :class="form.errors.name ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'"
+                        />
+                        <span v-if="form.errors.name" class="text-[10px] text-rose-600 font-bold mt-1 block">
+                            {{ form.errors.name }}
+                        </span>
+                        <p v-if="!isEditing" class="text-[11px] text-slate-400 mt-1 font-jp">
+                            * Kode sistem akan dibuat otomatis berdasarkan nama level (contoh: N5, N4, dsb).
+                        </p>
                     </div>
 
                     <div class="grid grid-cols-3 gap-3">

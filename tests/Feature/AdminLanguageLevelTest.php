@@ -43,7 +43,24 @@ class AdminLanguageLevelTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_admin_can_create_language_level(): void
+    public function test_admin_can_create_language_level_without_code(): void
+    {
+        $response = $this->actingAs($this->admin)->post(route('admin.master.language-levels.store'), [
+            'name' => 'JLPT N5 (Tingkat Dasar)',
+            'name_jp' => '日本語能力試験 N5',
+            'description' => 'Materi dasar kosakata & kanji.',
+            'sort_order' => 1,
+            'is_active' => true,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('language_levels', [
+            'code' => 'N5',
+            'name' => 'JLPT N5 (Tingkat Dasar)',
+        ]);
+    }
+
+    public function test_admin_can_create_language_level_with_custom_code(): void
     {
         $response = $this->actingAs($this->admin)->post(route('admin.master.language-levels.store'), [
             'code' => 'SSW_KAIGO',
@@ -69,7 +86,6 @@ class AdminLanguageLevelTest extends TestCase
         );
 
         $response = $this->actingAs($this->admin)->put(route('admin.master.language-levels.update', $level->id), [
-            'code' => 'N5',
             'name' => 'JLPT N5 (Tingkat Dasar Diperbarui)',
             'name_jp' => 'JLPT N5 基礎',
             'description' => 'Materi N5 dasar.',
@@ -80,6 +96,7 @@ class AdminLanguageLevelTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('language_levels', [
             'id' => $level->id,
+            'code' => 'N5',
             'name' => 'JLPT N5 (Tingkat Dasar Diperbarui)',
         ]);
     }

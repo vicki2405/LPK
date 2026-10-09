@@ -19,14 +19,30 @@ return new class extends Migration
         });
 
         // Backfill level dari chapters & courses yang sudah ada
-        DB::statement("
-            UPDATE vocabularies v
-            LEFT JOIN chapters c ON v.chapter_id = c.id
-            LEFT JOIN courses co ON c.course_id = co.id
-            SET v.level = COALESCE(co.level, 'N5'),
-                v.category = COALESCE(c.title, 'Umum / Sehari-hari')
-            WHERE v.chapter_id IS NOT NULL
-        ");
+        if (DB::getDriverName() === 'sqlite') {
+            DB::statement("
+                UPDATE vocabularies
+                SET level = COALESCE((
+                    SELECT co.level FROM chapters c
+                    LEFT JOIN courses co ON c.course_id = co.id
+                    WHERE c.id = vocabularies.chapter_id
+                ), 'N5'),
+                category = COALESCE((
+                    SELECT c.title FROM chapters c
+                    WHERE c.id = vocabularies.chapter_id
+                ), 'Umum / Sehari-hari')
+                WHERE chapter_id IS NOT NULL
+            ");
+        } else {
+            DB::statement("
+                UPDATE vocabularies v
+                LEFT JOIN chapters c ON v.chapter_id = c.id
+                LEFT JOIN courses co ON c.course_id = co.id
+                SET v.level = COALESCE(co.level, 'N5'),
+                    v.category = COALESCE(c.title, 'Umum / Sehari-hari')
+                WHERE v.chapter_id IS NOT NULL
+            ");
+        }
     }
 
     /**

@@ -693,6 +693,14 @@ class JapaneseDictionaryService
     }
 
     /**
+     * Alias for search: translate Indonesian meaning to Japanese kanji, hiragana, romaji.
+     */
+    public function translateIndonesianToJapanese(string $indonesianTerm): array
+    {
+        return $this->search($indonesianTerm);
+    }
+
+    /**
      * Fetch authentic Japanese pronunciation MP3 audio binary.
      */
     public function getNativePronunciationAudio(string $text): ?string
