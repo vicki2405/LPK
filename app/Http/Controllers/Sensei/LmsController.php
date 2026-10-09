@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Chapter;
 use App\Models\Course;
 use App\Models\Lesson;
+use App\Models\QuestionCategory;
 use App\Models\Vocabulary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class LmsController extends Controller
             $perPage = 20;
         }
 
-        $query = Chapter::query()->withCount(['vocabularies', 'lessons']);
+        $query = Chapter::query()->withCount(['vocabularies', 'lessons'])->with('learningIndicators');
 
         if ($selectedCourseId) {
             $query->where('course_id', $selectedCourseId);
@@ -59,10 +60,14 @@ class LmsController extends Controller
 
         $chapters = $query->paginate($perPage)->withQueryString();
 
+        $learningIndicators = QuestionCategory::orderBy('name', 'asc')
+            ->get(['id', 'name', 'code', 'chapter_id', 'level', 'section_type']);
+
         return Inertia::render('Sensei/Lms/Index', [
             'courses' => $courses,
             'selectedCourseId' => $selectedCourseId,
             'chapters' => $chapters,
+            'learningIndicators' => $learningIndicators,
             'filters' => [
                 'course_id' => $selectedCourseId,
                 'search' => $request->input('search', ''),
@@ -102,16 +107,23 @@ class LmsController extends Controller
                 'chapter_number' => 'required|integer|min:1',
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
+                'learning_indicator_id' => 'nullable|exists:question_categories,id',
                 'is_published' => 'nullable|boolean',
             ]);
 
-            Chapter::create([
+            $chapter = Chapter::create([
                 'course_id' => $validated['course_id'],
                 'chapter_number' => $validated['chapter_number'],
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
                 'is_published' => $request->has('is_published') ? (bool) $request->input('is_published') : true,
             ]);
+
+            if (!empty($validated['learning_indicator_id'])) {
+                QuestionCategory::where('id', $validated['learning_indicator_id'])->update([
+                    'chapter_id' => $chapter->id,
+                ]);
+            }
 
             return redirect()->back()->with('success', 'Bab baru berhasil ditambahkan!');
         }
@@ -189,10 +201,25 @@ class LmsController extends Controller
                 'chapter_number' => 'required|integer|min:1',
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
+                'learning_indicator_id' => 'nullable',
                 'is_published' => 'nullable|boolean',
             ]);
 
-            $chapter->update($validated);
+            $chapter->update([
+                'chapter_number' => $validated['chapter_number'],
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'is_published' => $request->has('is_published') ? (bool) $request->input('is_published') : $chapter->is_published,
+            ]);
+
+            if ($request->has('learning_indicator_id')) {
+                QuestionCategory::where('chapter_id', $chapter->id)->update(['chapter_id' => null]);
+                if (!empty($request->input('learning_indicator_id'))) {
+                    QuestionCategory::where('id', $request->input('learning_indicator_id'))->update([
+                        'chapter_id' => $chapter->id,
+                    ]);
+                }
+            }
 
             return redirect()->back()->with('success', 'Data Bab materi berhasil diperbarui!');
         }

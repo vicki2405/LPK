@@ -1,4 +1,4 @@
-﻿<template>
+<template>
     <AuthenticatedLayout>
         <Head :title="isJapanese ? '言語レベル設定' : 'Master Level Bahasa'" />
 
@@ -210,30 +210,16 @@
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="col-span-2">
-                            <label class="block text-[11px] font-black text-slate-700 mb-1 uppercase tracking-wider font-jp">
-                                {{ isJapanese ? '日本語名称' : 'Nama Bahasa Jepang (Opsional)' }}
-                            </label>
-                            <input 
-                                type="text" 
-                                v-model="form.name_jp" 
-                                placeholder="Contoh: JLPT N5 (入門・基礎)" 
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-japan-red focus:outline-none font-jp"
-                            />
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-black text-slate-700 mb-1 uppercase tracking-wider font-jp">
-                                Urutan (#)
-                            </label>
-                            <input 
-                                type="number" 
-                                v-model.number="form.sort_order" 
-                                min="0" 
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-japan-red focus:outline-none"
-                            />
-                        </div>
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-700 mb-1 uppercase tracking-wider font-jp">
+                            {{ isJapanese ? '表示順序 (#)' : 'Urutan Tampilan (#)' }}
+                        </label>
+                        <input 
+                            type="number" 
+                            v-model.number="form.sort_order" 
+                            min="0" 
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-japan-red focus:outline-none"
+                        />
                     </div>
 
                     <div>

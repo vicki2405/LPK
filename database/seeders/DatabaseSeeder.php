@@ -17,6 +17,8 @@ class DatabaseSeeder extends Seeder
             RoleAndUserSeeder::class,
             LmsAndCbtSampleSeeder::class,
             LmsCurriculumTenChaptersSeeder::class,
+            KanjiSampleSeeder::class,
+            GroupExistingDataSeeder::class,
             WebsiteSettingsSeeder::class,
             CbtSampleExamSeeder::class,
             LearningIndicatorsRealSeeder::class,

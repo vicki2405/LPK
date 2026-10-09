@@ -158,7 +158,36 @@
                         </div>
                     </div>
 
-                    <!-- Row 3: Arti Bahasa Indonesia -->
+                    <!-- Row 3: Onyomi & Kunyomi (Opsional) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-1.5 uppercase tracking-wider font-jp flex items-center justify-between">
+                                <span>{{ isJapanese ? '音読み (任意)' : 'Onyomi (音読み)' }}</span>
+                                <span class="text-[10px] text-slate-400 font-normal font-sans">Opsional</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                v-model="form.onyomi"
+                                placeholder="Contoh: ニチ, ジツ"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-300 text-xs font-bold font-jp text-slate-900 bg-slate-50/40 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-700 mb-1.5 uppercase tracking-wider font-jp flex items-center justify-between">
+                                <span>{{ isJapanese ? '訓読み (任意)' : 'Kunyomi (訓読み)' }}</span>
+                                <span class="text-[10px] text-slate-400 font-normal font-sans">Opsional</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                v-model="form.kunyomi"
+                                placeholder="Contoh: ひ, -び, -か"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-300 text-xs font-bold font-jp text-slate-900 bg-slate-50/40 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Arti Bahasa Indonesia -->
                     <div>
                         <label class="block text-xs font-black text-slate-700 mb-1.5 uppercase tracking-wider font-jp">
                             {{ isJapanese ? 'インドネシア語の意味 *' : 'Arti Bahasa Indonesia *' }}
@@ -285,6 +314,8 @@ const form = useForm({
     kanji: props.kanji.kanji || '',
     hiragana: props.kanji.hiragana || '',
     romaji: props.kanji.romaji || '',
+    onyomi: props.kanji.onyomi || '',
+    kunyomi: props.kanji.kunyomi || '',
     meaning_id: props.kanji.meaning_id || '',
     level: props.kanji.level || 'N5',
     topic_ids: props.selectedTopicIds || [],

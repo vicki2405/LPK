@@ -96,4 +96,61 @@ class SenseiLmsCurriculumTableTest extends TestCase
             ->where('filters.per_page', 10)
         );
     }
+
+    public function test_sensei_can_create_chapter_with_learning_indicator()
+    {
+        $indicator = \App\Models\QuestionCategory::create([
+            'name' => 'Partikel Dasar N5',
+            'code' => 'IND-N5-01',
+            'level' => 'N5',
+        ]);
+
+        $response = $this->actingAs($this->sensei)->post(route('sensei.lms.store'), [
+            'type' => 'chapter',
+            'course_id' => $this->course->id,
+            'chapter_number' => 26,
+            'title' => 'Bab 26: Partikel Lanjutan',
+            'description' => 'Materi partikel',
+            'learning_indicator_id' => $indicator->id,
+            'is_published' => true,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('chapters', [
+            'chapter_number' => 26,
+            'title' => 'Bab 26: Partikel Lanjutan',
+        ]);
+
+        $chapter = Chapter::where('chapter_number', 26)->first();
+        $this->assertDatabaseHas('question_categories', [
+            'id' => $indicator->id,
+            'chapter_id' => $chapter->id,
+        ]);
+    }
+
+    public function test_sensei_can_update_chapter_with_learning_indicator()
+    {
+        $chapter = Chapter::where('chapter_number', 1)->first();
+        $indicator = \App\Models\QuestionCategory::create([
+            'name' => 'Tata Bahasa Minna Bab 1',
+            'code' => 'IND-N5-02',
+            'level' => 'N5',
+        ]);
+
+        $response = $this->actingAs($this->sensei)->put(route('sensei.lms.update', $chapter->id), [
+            'type' => 'chapter',
+            'chapter_number' => 1,
+            'title' => 'Bab 1: Perkenalan Diri Terkini',
+            'description' => 'Update deskripsi',
+            'learning_indicator_id' => $indicator->id,
+            'is_published' => true,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('question_categories', [
+            'id' => $indicator->id,
+            'chapter_id' => $chapter->id,
+        ]);
+    }
 }
+

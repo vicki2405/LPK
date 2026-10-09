@@ -4,7 +4,7 @@
     <AuthenticatedLayout>
         <div class="space-y-6 animate-fade-in pb-16">
             <!-- ================= HERO HEADER BANNER ================= -->
-            <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+            <div v-if="!isPracticeMode" class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                 <!-- Japanese Kanji Watermark -->
                 <div class="absolute -right-4 -bottom-6 font-jp text-8xl sm:text-9xl font-black text-white select-none pointer-events-none opacity-5">
                     漢字
@@ -200,7 +200,7 @@
                                 <span class="text-xs font-black text-slate-900 font-jp truncate">
                                     {{ currentActiveTopic ? currentActiveTopic.title : 'Semua Kanji (Full Deck)' }}
                                 </span>
-                                <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold shrink-0">
+                                <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold shrink-0">
                                     {{ activeKanjiList.length }} Kanji
                                 </span>
                             </div>
@@ -291,7 +291,7 @@
                             class="relative w-full min-h-[320px] sm:min-h-[360px] rounded-3xl cursor-pointer transition-transform duration-500 transform-style-3d shadow-xl hover:shadow-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-8 text-center select-none"
                             :class="{ 'rotate-y-180 bg-gradient-to-br from-indigo-50/80 to-purple-50/80': isFlipped }"
                         >
-                            <!-- FRONT SIDE: Huge Kanji Character -->
+                            <!-- FRONT SIDE: Huge Kanji Character ONLY -->
                             <div v-show="!isFlipped" class="flex flex-col items-center justify-center space-y-4">
                                 <div class="flex items-center gap-2">
                                     <span class="px-2.5 py-0.5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase font-mono">
@@ -302,45 +302,65 @@
                                     </span>
                                 </div>
 
-                                <h2 class="text-7xl sm:text-8xl font-black text-slate-950 font-jp tracking-tight py-2">
+                                <h2 class="text-8xl sm:text-9xl font-black text-slate-950 font-jp tracking-tight py-4">
                                     {{ currentKanji?.kanji }}
                                 </h2>
-
-                                <p class="text-sm font-bold text-indigo-600 font-jp">
-                                    {{ currentKanji?.hiragana }}
-                                </p>
                                 
                                 <div class="flex items-center gap-1.5 text-xs text-slate-400 font-bold pt-2">
-                                    <span>👆 Klik untuk melihat arti & cara baca</span>
+                                    <span>👆 Klik kartu untuk melihat cara baca & arti</span>
                                 </div>
                             </div>
 
-                            <!-- BACK SIDE: Meaning & Onyomi / Kunyomi -->
-                            <div v-show="isFlipped" class="flex flex-col items-center justify-center space-y-4 transform rotate-y-180 w-full max-w-md">
-                                <span class="text-xs font-black text-indigo-900 uppercase tracking-wider bg-indigo-100 px-3 py-1 rounded-full">
-                                    Arti Bahasa Indonesia
-                                </span>
+                            <!-- BACK SIDE: Hiragana, Romaji, Meaning & Onyomi/Kunyomi -->
+                            <div v-show="isFlipped" class="flex flex-col items-center justify-center space-y-3.5 transform rotate-y-180 w-full max-w-md">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-0.5 rounded-lg bg-indigo-100 text-indigo-800 text-[11px] font-black font-jp">
+                                        漢字: {{ currentKanji?.kanji }}
+                                    </span>
+                                    <span v-if="currentKanji?.stroke_count" class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-mono font-bold">
+                                        {{ currentKanji.stroke_count }} 画
+                                    </span>
+                                </div>
 
-                                <h2 class="text-3xl font-black text-slate-950 uppercase">
-                                    {{ currentKanji?.meaning_id }}
-                                </h2>
+                                <!-- Cara Baca Hiragana & Romaji -->
+                                <div class="space-y-0.5 py-1">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                        Cara Baca (読み方)
+                                    </span>
+                                    <div class="text-2xl sm:text-3xl font-black text-indigo-600 font-jp tracking-wide">
+                                        {{ currentKanji?.hiragana || '-' }}
+                                    </div>
+                                    <div v-if="currentKanji?.romaji" class="text-xs sm:text-sm font-bold text-slate-500 font-mono">
+                                        {{ currentKanji?.romaji }}
+                                    </div>
+                                </div>
+
+                                <!-- Arti Bahasa Indonesia -->
+                                <div class="bg-white/90 p-3 rounded-2xl border border-indigo-100 w-full shadow-2xs">
+                                    <span class="text-[10px] font-black text-indigo-700 uppercase tracking-wider block mb-0.5">
+                                        Arti Bahasa Indonesia
+                                    </span>
+                                    <h2 class="text-lg sm:text-xl font-black text-slate-900 uppercase">
+                                        {{ currentKanji?.meaning_id }}
+                                    </h2>
+                                </div>
 
                                 <!-- Onyomi / Kunyomi Readings Block -->
-                                <div class="grid grid-cols-2 gap-2 w-full text-left bg-white/90 backdrop-blur-xs p-3.5 rounded-2xl border border-indigo-200 shadow-2xs">
+                                <div class="grid grid-cols-2 gap-2 w-full text-left bg-white/95 p-3 rounded-2xl border border-indigo-100 shadow-2xs">
                                     <div>
                                         <span class="text-[10px] font-black text-rose-600 uppercase tracking-wider block">音読み (Onyomi):</span>
-                                        <p class="font-jp font-bold text-xs text-slate-900">{{ currentKanji?.onyomi || '-' }}</p>
+                                        <p class="font-jp font-bold text-xs text-slate-900 mt-0.5">{{ currentKanji?.onyomi || '-' }}</p>
                                     </div>
                                     <div>
                                         <span class="text-[10px] font-black text-emerald-600 uppercase tracking-wider block">訓読み (Kunyomi):</span>
-                                        <p class="font-jp font-bold text-xs text-slate-900">{{ currentKanji?.kunyomi || '-' }}</p>
+                                        <p class="font-jp font-bold text-xs text-slate-900 mt-0.5">{{ currentKanji?.kunyomi || '-' }}</p>
                                     </div>
                                 </div>
 
                                 <!-- Notes or Examples if any -->
-                                <div v-if="currentKanji?.notes" class="text-xs text-slate-600 font-jp bg-slate-50/90 p-3 rounded-2xl border border-slate-200 text-left w-full">
+                                <div v-if="currentKanji?.notes" class="text-xs text-slate-600 font-jp bg-slate-50/90 p-2.5 rounded-xl border border-slate-200 text-left w-full">
                                     <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Catatan:</span>
-                                    <p>{{ currentKanji.notes }}</p>
+                                    <p class="leading-relaxed">{{ currentKanji.notes }}</p>
                                 </div>
                             </div>
                         </div>

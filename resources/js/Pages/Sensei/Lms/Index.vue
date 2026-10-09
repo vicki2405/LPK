@@ -30,27 +30,6 @@
                 </div>
             </div>
 
-            <!-- ================= COURSE SELECTION TABS ================= -->
-            <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                <button
-                    v-for="course in courses"
-                    :key="course.id"
-                    @click="changeCourse(course.id)"
-                    class="px-4 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 cursor-pointer border active:scale-[0.98] flex items-center gap-2"
-                    :class="selectedCourseId === course.id 
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-500/20' 
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300'"
-                >
-                    <span>📚 {{ course.title }}</span>
-                    <span 
-                        class="px-2 py-0.5 rounded-lg text-[10px] font-black"
-                        :class="selectedCourseId === course.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'"
-                    >
-                        {{ course.chapters_count ?? course.chapters?.length ?? 0 }} {{ isJapanese ? '課' : 'Bab' }}
-                    </span>
-                </button>
-            </div>
-
             <!-- ================= FILTER & SEARCH TOOLBAR ================= -->
             <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
@@ -172,10 +151,20 @@
                                                 {{ chapter.title }}
                                             </Link>
                                         </div>
+                                        <div v-if="chapter.learning_indicators && chapter.learning_indicators.length > 0" class="flex flex-wrap gap-1 mt-0.5">
+                                            <span 
+                                                v-for="ind in chapter.learning_indicators" 
+                                                :key="ind.id"
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200/70 text-[10px] font-bold"
+                                            >
+                                                <Target class="w-3 h-3 text-rose-600 shrink-0" />
+                                                <span class="truncate max-w-[280px]">{{ ind.name }}</span>
+                                            </span>
+                                        </div>
                                         <p v-if="chapter.description" class="text-xs text-slate-500 line-clamp-1 font-normal leading-relaxed">
                                             {{ chapter.description }}
                                         </p>
-                                        <span v-else class="text-[11px] text-slate-400 italic">
+                                        <span v-else-if="!chapter.learning_indicators || chapter.learning_indicators.length === 0" class="text-[11px] text-slate-400 italic">
                                             Belum ada catatan deskripsi.
                                         </span>
                                     </div>
@@ -407,16 +396,49 @@
                         />
                     </div>
 
-                    <!-- 4. Deskripsi / Catatan Capaian Belajar -->
+                    <!-- 4. Capaian Pembelajaran (Dropdown dari Admin Master Learning Indicators) -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">
-                            {{ isJapanese ? '概要・学習到達目標（任意）' : 'Ringkasan & Capaian Belajar (Opsional)' }}
-                        </label>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <Target class="w-3.5 h-3.5 text-rose-600" />
+                                <span>{{ isJapanese ? '学習到達目標・評価指標（マスター連動）' : 'Capaian Pembelajaran (Indikator Belajar)' }}</span>
+                            </label>
+                            <span class="text-[10px] text-slate-400 font-medium">Opsional</span>
+                        </div>
+                        <div class="relative">
+                            <select 
+                                v-model="chapterForm.learning_indicator_id"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 text-xs sm:text-sm font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:outline-none transition-all cursor-pointer appearance-none pr-9"
+                            >
+                                <option value="">{{ isJapanese ? '-- 目標指標を選択（未設定） --' : '-- Pilih Capaian Pembelajaran dari Master Admin --' }}</option>
+                                <option 
+                                    v-for="ind in learningIndicators" 
+                                    :key="ind.id" 
+                                    :value="ind.id"
+                                >
+                                    {{ ind.code ? `[${ind.code}] ` : '' }}{{ ind.name }} (Level: {{ ind.level || 'Umum' }})
+                                </option>
+                            </select>
+                            <ChevronDown class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1">
+                            {{ isJapanese ? '※ 管理者ポータル（/admin/master/learning-indicators）の指標と自動連動します。' : 'Otomatis terhubung dengan master indikator kurikulum admin untuk evaluasi & CBT.' }}
+                        </p>
+                    </div>
+
+                    <!-- 5. Catatan / Ringkasan Tambahan Bab (Opsional) -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700">
+                                {{ isJapanese ? '補足メモ・概要（任意）' : 'Catatan / Ringkasan Tambahan Bab' }}
+                            </label>
+                            <span class="text-[10px] text-slate-400 font-medium">Opsional</span>
+                        </div>
                         <textarea 
                             v-model="chapterForm.description" 
-                            rows="3"
-                            :placeholder="isJapanese ? 'この課で習得する主要な文法項目や学習内容の概要...' : 'Penjelasan singkat topik tata bahasa (bunpou) utama atau target kompetensi bab ini...'" 
-                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 text-xs sm:text-sm text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:outline-none transition-all resize-none placeholder:text-slate-400"
+                            rows="2"
+                            :placeholder="isJapanese ? 'この課の補足事項や学習メモ...' : 'Penjelasan singkat catatan topik tata bahasa atau materi pokok bab ini...'" 
+                            class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50/70 text-xs text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:outline-none transition-all resize-none placeholder:text-slate-400"
                         ></textarea>
                     </div>
 
@@ -461,7 +483,8 @@ import {
     Save,
     Search,
     RotateCcw,
-    ArrowUpDown
+    ArrowUpDown,
+    Target
 } from 'lucide-vue-next';
 
 const props = defineProps({
@@ -469,6 +492,10 @@ const props = defineProps({
     selectedCourseId: Number,
     chapters: [Object, Array],
     filters: Object,
+    learningIndicators: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const { isJapanese } = useLang();
@@ -557,6 +584,7 @@ const chapterForm = useForm({
     course_id: props.selectedCourseId || 1,
     chapter_number: 1,
     title: '',
+    learning_indicator_id: '',
     description: '',
     is_published: true,
 });
@@ -570,6 +598,8 @@ const openCreateChapterModal = () => {
     // Auto increment chapter_number based on total
     const totalCount = isPaginated.value ? (props.chapters.total || 0) : chapterList.value.length;
     chapterForm.chapter_number = totalCount + 1;
+    chapterForm.learning_indicator_id = '';
+    chapterForm.description = '';
     chapterForm.is_published = true;
     showChapterModal.value = true;
 };
@@ -580,6 +610,9 @@ const openEditChapterModal = (ch) => {
     chapterForm.course_id = ch.course_id;
     chapterForm.chapter_number = ch.chapter_number;
     chapterForm.title = ch.title;
+    const linkedInd = ch.learning_indicators?.[0]?.id || 
+                      (props.learningIndicators?.find(i => i.chapter_id === ch.id)?.id || '');
+    chapterForm.learning_indicator_id = linkedInd;
     chapterForm.description = ch.description || '';
     chapterForm.is_published = Boolean(ch.is_published);
     showChapterModal.value = true;

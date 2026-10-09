@@ -4,7 +4,7 @@
     <AuthenticatedLayout>
         <div class="space-y-6 animate-fade-in pb-16">
             <!-- ================= HERO HEADER BANNER ================= -->
-            <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+            <div v-if="!isPracticeMode" class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                 <!-- Japanese Motif Watermark -->
                 <div class="absolute -right-4 -bottom-6 font-jp text-8xl sm:text-9xl font-black text-white select-none pointer-events-none opacity-5">
                     単語
@@ -277,54 +277,75 @@
                             class="relative w-full min-h-[300px] sm:min-h-[340px] rounded-3xl cursor-pointer transition-transform duration-500 transform-style-3d shadow-xl hover:shadow-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-8 text-center select-none"
                             :class="{ 'rotate-y-180 bg-gradient-to-br from-amber-50/80 to-rose-50/80': isFlipped }"
                         >
-                            <!-- FRONT SIDE: Kanji / Furigana -->
+                            <!-- FRONT SIDE: Kanji / Kata Utama ONLY -->
                             <div v-show="!isFlipped" class="flex flex-col items-center justify-center space-y-4">
-                                <div class="flex items-center gap-2">
-                                    <div class="flex items-center gap-1.5 flex-wrap justify-center">
-                                        <span class="px-2.5 py-0.5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase font-mono">
-                                            {{ currentVocab?.level || selectedLevel }}
-                                        </span>
-                                        <span class="text-[10px] font-bold text-japan-red uppercase tracking-wider bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-100">
-                                            {{ currentVocab?.word_type || 'Kata Benda' }}
-                                        </span>
-                                    </div>
-                                    <button 
-                                        type="button"
-                                        @click.stop="speakJapanese(currentVocab?.hiragana || currentVocab?.kanji, currentVocab?.audio_file)" 
-                                        class="p-2 rounded-full transition-all shadow-xs cursor-pointer"
-                                        :class="isPlayingAudio && currentlyPlayingText === (currentVocab?.hiragana || currentVocab?.kanji) 
-                                            ? 'bg-amber-100 text-amber-700 animate-pulse ring-2 ring-amber-300' 
-                                            : 'bg-slate-100 hover:bg-slate-200 text-slate-700'"
-                                        title="Dengarkan Pelafalan Asli Jepang (Tokyo 🔊)"
-                                    >
-                                        <Volume2 class="w-4 h-4" />
-                                    </button>
+                                <div class="flex items-center gap-1.5 flex-wrap justify-center">
+                                    <span class="px-2.5 py-0.5 rounded-lg bg-slate-900 text-white text-[10px] font-black uppercase font-mono">
+                                        {{ currentVocab?.level || selectedLevel }}
+                                    </span>
+                                    <span class="text-[10px] font-bold text-japan-red uppercase tracking-wider bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-100">
+                                        {{ currentVocab?.word_type || 'Kata Benda' }}
+                                    </span>
                                 </div>
 
-                                <h2 class="text-4xl sm:text-5xl font-black text-slate-950 font-jp tracking-wide">
+                                <h2 class="text-5xl sm:text-6xl font-black text-slate-950 font-jp tracking-wide py-4">
                                     {{ currentVocab?.kanji || currentVocab?.hiragana }}
                                 </h2>
-                                <p class="text-base font-bold text-slate-800 font-jp">
-                                    {{ currentVocab?.hiragana }} 
-                                    <span v-if="currentVocab?.romaji" class="text-slate-500 font-normal">({{ currentVocab?.romaji }})</span>
-                                </p>
                                 
                                 <div class="flex items-center gap-1.5 text-xs text-slate-400 font-bold pt-2">
-                                    <span>👆 Klik untuk membalik arti</span>
+                                    <span>👆 Klik kartu untuk melihat cara baca & arti</span>
                                 </div>
                             </div>
 
-                            <!-- BACK SIDE: Meaning & Reibun -->
-                            <div v-show="isFlipped" class="flex flex-col items-center justify-center space-y-4 transform rotate-y-180">
-                                <span class="text-xs font-black text-amber-900 uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full">
-                                    Arti Bahasa Indonesia
-                                </span>
-                                <h2 class="text-3xl font-black text-slate-950 uppercase">
-                                    {{ currentVocab?.meaning_id }}
-                                </h2>
-                                <div v-if="currentVocab?.example_sentence_jp" class="bg-white/90 backdrop-blur-xs p-4 rounded-2xl border border-amber-200 text-xs text-slate-800 font-jp text-left shadow-xs max-w-md">
+                            <!-- BACK SIDE: Cara Baca (Hiragana & Romaji), Arti, dan Reibun -->
+                            <div v-show="isFlipped" class="flex flex-col items-center justify-center space-y-3.5 transform rotate-y-180 w-full max-w-md">
+                                <div class="flex items-center gap-2">
+                                    <span v-if="currentVocab?.kanji" class="px-2.5 py-0.5 rounded-lg bg-amber-100 text-amber-900 text-[11px] font-black font-jp">
+                                        漢字: {{ currentVocab?.kanji }}
+                                    </span>
+                                    <span class="text-[10px] font-bold text-japan-red uppercase tracking-wider bg-rose-50 px-2.5 py-0.5 rounded-lg border border-rose-100">
+                                        {{ currentVocab?.word_type || 'Kata Benda' }}
+                                    </span>
+                                </div>
+
+                                <!-- Cara Baca Hiragana & Romaji -->
+                                <div class="space-y-0.5 py-1">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">
+                                        Cara Baca (読み方)
+                                    </span>
+                                    <div class="flex items-center justify-center gap-2">
+                                        <span class="text-2xl sm:text-3xl font-black text-amber-600 font-jp tracking-wide">
+                                            {{ currentVocab?.hiragana }}
+                                        </span>
+                                        <button 
+                                            type="button"
+                                            @click.stop="speakJapanese(currentVocab?.hiragana || currentVocab?.kanji, currentVocab?.audio_file)" 
+                                            class="p-1.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 transition-all shadow-xs cursor-pointer"
+                                            :class="{ 'animate-pulse ring-2 ring-amber-300': isPlayingAudio && currentlyPlayingText === (currentVocab?.hiragana || currentVocab?.kanji) }"
+                                            title="Dengarkan Pelafalan Asli Jepang (Tokyo 🔊)"
+                                        >
+                                            <Volume2 class="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                    <div v-if="currentVocab?.romaji" class="text-xs sm:text-sm font-bold text-slate-500 font-mono">
+                                        {{ currentVocab?.romaji }}
+                                    </div>
+                                </div>
+
+                                <!-- Arti Bahasa Indonesia -->
+                                <div class="bg-white/90 p-3 rounded-2xl border border-amber-200 w-full shadow-2xs">
+                                    <span class="text-[10px] font-black text-amber-700 uppercase tracking-wider block mb-0.5">
+                                        Arti Bahasa Indonesia
+                                    </span>
+                                    <h2 class="text-lg sm:text-xl font-black text-slate-900 uppercase">
+                                        {{ currentVocab?.meaning_id }}
+                                    </h2>
+                                </div>
+
+                                <!-- Contoh Kalimat (例文 / Reibun) -->
+                                <div v-if="currentVocab?.example_sentence_jp" class="bg-white/95 backdrop-blur-xs p-3 rounded-2xl border border-amber-200 text-xs text-slate-800 font-jp text-left shadow-2xs w-full">
                                     <div class="flex items-center justify-between mb-1">
-                                        <span class="text-japan-red font-black">例文 (Reibun):</span>
+                                        <span class="text-japan-red font-black text-[11px]">例文 (Reibun):</span>
                                         <button 
                                             type="button"
                                             @click.stop="speakJapanese(currentVocab?.example_sentence_jp)" 
@@ -335,7 +356,7 @@
                                             <Volume2 class="w-3.5 h-3.5" />
                                         </button>
                                     </div>
-                                    <p class="font-bold">{{ currentVocab?.example_sentence_jp }}</p>
+                                    <p class="font-bold leading-relaxed">{{ currentVocab?.example_sentence_jp }}</p>
                                     <p v-if="currentVocab?.example_sentence_id" class="text-slate-500 text-[11px] font-sans mt-0.5">{{ currentVocab?.example_sentence_id }}</p>
                                 </div>
                             </div>
