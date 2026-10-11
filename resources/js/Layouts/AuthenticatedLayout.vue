@@ -939,7 +939,7 @@
             </header>
 
             <!-- Page Main Content Slot -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+            <main class="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 md:pb-8">
                 <!-- Flash Messages Feedback Banner -->
                 <div v-if="$page.props.flash?.success" class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold flex items-center gap-3 shadow-xs animate-fade-in">
                     <CheckCircle2 class="w-5 h-5 text-emerald-600 shrink-0" />
@@ -955,86 +955,232 @@
             </main>
         </div>
 
-        <!-- ================= MOBILE BOTTOM NAVIGATION ================= -->
-        <div class="md:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 z-30 px-3 py-2 flex items-center justify-around shadow-lg">
-            <Link :href="dashboardRoute" prefetch cache-for="30s"
-                class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                :class="isDashboardActive ? 'text-japan-red' : 'text-slate-600'">
-                <LayoutDashboard class="w-4 h-4" />
-                <span>Dashboard</span>
-            </Link>
+        <!-- ================= MOBILE & TABLET BOTTOM NAVIGATION (HORIZONTAL SCROLLABLE) ================= -->
+        <Teleport to="body">
+            <nav 
+                aria-label="Navigasi Cepat Mobile"
+                class="md:hidden fixed left-0 right-0 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 z-50 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] select-none"
+                :style="{
+                    bottom: bottomSafeOffset !== '0px' ? bottomSafeOffset : 'calc(100vh - 100dvh)',
+                    paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0.5rem))',
+                    transform: 'translateZ(0)',
+                    WebkitTransform: 'translateZ(0)'
+                }"
+        >
+            <div class="relative flex items-center w-full">
+                <!-- Indicator Gradient Fade Kanan (isyarat visual bahwa menu bisa digeser ke kanan) -->
+                <div class="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white via-white/80 to-transparent z-10"></div>
 
-            <!-- Admin Menus Mobile -->
-            <template v-if="userRole === 'admin'">
-                <Link :href="route('admin.students.index')" prefetch cache-for="30s"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('admin.students.*') ? 'text-japan-red' : 'text-slate-600'">
-                    <Users class="w-4 h-4" />
-                    <span>Siswa</span>
-                </Link>
-                <Link :href="route('admin.master.batches.index')" prefetch cache-for="1m"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('admin.master.batches.*') ? 'text-japan-red' : 'text-slate-600'">
-                    <GraduationCap class="w-4 h-4" />
-                    <span>Angkatan</span>
-                </Link>
-                <Link :href="route('admin.website-settings.index')" prefetch cache-for="1m"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('admin.website-settings.*') ? 'text-japan-red' : 'text-slate-600'">
-                    <Globe class="w-4 h-4" />
-                    <span>CMS</span>
-                </Link>
-            </template>
+                <!-- Scrollable Track: Geser ke kiri / kanan dengan touch-pan-x & snap-x -->
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth px-2.5 py-1.5 w-full snap-x touch-pan-x">
+                    <!-- Shared: Dashboard -->
+                    <Link :href="dashboardRoute" prefetch cache-for="30s"
+                        class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                        :class="isDashboardActive 
+                            ? 'bg-red-50 text-japan-red font-black shadow-xs ring-1 ring-red-100 scale-102' 
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                        <div class="relative">
+                            <LayoutDashboard class="w-5 h-5 transition-transform group-hover:scale-110" :class="isDashboardActive ? 'scale-110' : ''" />
+                            <span v-if="isDashboardActive" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-japan-red rounded-full ring-2 ring-white"></span>
+                        </div>
+                        <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
+                            {{ isJapanese ? 'ホーム' : 'Dashboard' }}
+                        </span>
+                    </Link>
 
-            <!-- Sensei Menus Mobile -->
-            <template v-if="userRole === 'sensei'">
-                <Link :href="route('sensei.lms.index')" prefetch cache-for="1m"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('sensei.lms.*') ? 'text-blue-700' : 'text-slate-600'">
-                    <BookOpen class="w-4 h-4" />
-                    <span>LMS</span>
-                </Link>
-                <Link :href="route('sensei.questions.index')" prefetch cache-for="1m"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="isSoalMenuActive ? 'text-amber-700' : 'text-slate-600'">
-                    <HelpCircle class="w-4 h-4" />
-                    <span>Soal</span>
-                </Link>
-                <Link :href="route('sensei.exams.index')" prefetch cache-for="30s"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('sensei.exams.*') ? 'text-japan-red' : 'text-slate-600'">
-                    <Clock class="w-4 h-4" />
-                    <span>CBT</span>
-                </Link>
-            </template>
+                    <!-- ================= SISWA MOBILE BOTTOM MENUS (LENGKAP & BISA DIGESER) ================= -->
+                    <template v-if="userRole === 'siswa'">
+                        <!-- 1. Materi Bab -->
+                        <Link :href="route('siswa.lms.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('siswa.lms.*') 
+                                ? 'bg-blue-50 text-blue-700 font-black shadow-xs ring-1 ring-blue-100 scale-102' 
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <div class="relative">
+                                <BookOpen class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('siswa.lms.*') ? 'scale-110' : ''" />
+                                <span v-if="route().current('siswa.lms.*')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-blue-600 rounded-full ring-2 ring-white"></span>
+                            </div>
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
+                                {{ isJapanese ? 'テキスト' : 'Materi' }}
+                            </span>
+                        </Link>
 
-            <!-- Siswa Menus Mobile -->
-            <template v-if="userRole === 'siswa'">
-                <Link :href="route('siswa.lms.index')" prefetch cache-for="1m"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('siswa.lms.*') ? 'text-blue-700 font-black' : 'text-slate-600'">
-                    <BookOpen class="w-4 h-4" />
-                    <span>Materi</span>
-                </Link>
-                <Link :href="route('siswa.flashcards.index')" prefetch cache-for="1m"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('siswa.flashcards.*') ? 'text-amber-700 font-black' : 'text-slate-600'">
-                    <Layers class="w-4 h-4" />
-                    <span>Kotoba</span>
-                </Link>
-                <Link :href="route('siswa.exams.index')" prefetch cache-for="30s"
-                    class="flex flex-col items-center gap-1 text-[10px] font-bold"
-                    :class="route().current('siswa.exams.*') || route().current('siswa.cbt.*') ? 'text-japan-red font-black' : 'text-slate-600'">
-                    <Clock class="w-4 h-4" />
-                    <span>CBT</span>
-                </Link>
-            </template>
-        </div>
+                        <!-- 2. Kotoba Flashcards -->
+                        <Link :href="route('siswa.flashcards.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('siswa.flashcards.*') 
+                                ? 'bg-amber-50 text-amber-700 font-black shadow-xs ring-1 ring-amber-100 scale-102' 
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <div class="relative">
+                                <Layers class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('siswa.flashcards.*') ? 'scale-110' : ''" />
+                                <span v-if="route().current('siswa.flashcards.*')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-amber-600 rounded-full ring-2 ring-white"></span>
+                            </div>
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
+                                {{ isJapanese ? '単語帳' : 'Kotoba' }}
+                            </span>
+                        </Link>
+
+                        <!-- 3. Kanji Cards -->
+                        <Link :href="route('siswa.kanjis.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('siswa.kanjis.*') 
+                                ? 'bg-indigo-50 text-indigo-700 font-black shadow-xs ring-1 ring-indigo-100 scale-102' 
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <div class="relative">
+                                <Languages class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('siswa.kanjis.*') ? 'scale-110' : ''" />
+                                <span v-if="route().current('siswa.kanjis.*')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-indigo-600 rounded-full ring-2 ring-white"></span>
+                            </div>
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
+                                {{ isJapanese ? '漢字' : 'Kanji' }}
+                            </span>
+                        </Link>
+
+                        <!-- 4. CBT Simulasi Ujian -->
+                        <Link :href="route('siswa.exams.index')" prefetch cache-for="30s"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('siswa.exams.*') || route().current('siswa.cbt.*') 
+                                ? 'bg-rose-50 text-japan-red font-black shadow-xs ring-1 ring-rose-100 scale-102' 
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <div class="relative">
+                                <Clock class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('siswa.exams.*') || route().current('siswa.cbt.*') ? 'scale-110' : ''" />
+                                <span v-if="route().current('siswa.exams.*') || route().current('siswa.cbt.*')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-japan-red rounded-full ring-2 ring-white"></span>
+                            </div>
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
+                                {{ isJapanese ? 'CBT模擬' : 'Ujian CBT' }}
+                            </span>
+                        </Link>
+
+                        <!-- 5. Progres Penyaluran / Journey -->
+                        <Link :href="route('siswa.journey.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('siswa.journey.*') 
+                                ? 'bg-emerald-50 text-emerald-700 font-black shadow-xs ring-1 ring-emerald-100 scale-102' 
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <div class="relative">
+                                <CheckCircle2 class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('siswa.journey.*') ? 'scale-110' : ''" />
+                                <span v-if="route().current('siswa.journey.*')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-600 rounded-full ring-2 ring-white"></span>
+                            </div>
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
+                                {{ isJapanese ? '出国進捗' : 'Journey' }}
+                            </span>
+                        </Link>
+
+                        <!-- 6. Profil Siswa -->
+                        <Link :href="route('profile.edit')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('profile.edit') 
+                                ? 'bg-slate-100 text-slate-900 font-black shadow-xs ring-1 ring-slate-200 scale-102' 
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <div class="relative">
+                                <User class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('profile.edit') ? 'scale-110' : ''" />
+                                <span v-if="route().current('profile.edit')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-slate-800 rounded-full ring-2 ring-white"></span>
+                            </div>
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
+                                {{ isJapanese ? 'マイ設定' : 'Profil' }}
+                            </span>
+                        </Link>
+                    </template>
+
+                    <!-- ================= SENSEI MOBILE BOTTOM MENUS (SCROLLABLE) ================= -->
+                    <template v-if="userRole === 'sensei'">
+                        <Link :href="route('sensei.lms.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('sensei.lms.*') ? 'bg-blue-50 text-blue-700 font-black shadow-xs ring-1 ring-blue-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <BookOpen class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">LMS</span>
+                        </Link>
+                        <Link :href="route('sensei.vocabularies.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('sensei.vocabularies.*') ? 'bg-amber-50 text-amber-700 font-black shadow-xs ring-1 ring-amber-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Layers class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Kotoba</span>
+                        </Link>
+                        <Link :href="route('sensei.kanjis.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('sensei.kanjis.*') ? 'bg-indigo-50 text-indigo-700 font-black shadow-xs ring-1 ring-indigo-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Languages class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Kanji</span>
+                        </Link>
+                        <Link :href="route('sensei.questions.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="isSoalMenuActive ? 'bg-amber-50 text-amber-800 font-black shadow-xs ring-1 ring-amber-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <HelpCircle class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Soal</span>
+                        </Link>
+                        <Link :href="route('sensei.exams.index')" prefetch cache-for="30s"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('sensei.exams.*') ? 'bg-red-50 text-japan-red font-black shadow-xs ring-1 ring-red-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Clock class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">CBT</span>
+                        </Link>
+                        <Link :href="route('sensei.grades.index')" prefetch cache-for="30s"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('sensei.grades.*') ? 'bg-emerald-50 text-emerald-700 font-black shadow-xs ring-1 ring-emerald-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Award class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Rapor</span>
+                        </Link>
+                        <Link :href="route('profile.edit')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('profile.edit') ? 'bg-slate-100 text-slate-900 font-black shadow-xs ring-1 ring-slate-200 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <User class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Profil</span>
+                        </Link>
+                    </template>
+
+                    <!-- ================= ADMIN MOBILE BOTTOM MENUS (SCROLLABLE) ================= -->
+                    <template v-if="userRole === 'admin'">
+                        <Link :href="route('admin.students.index')" prefetch cache-for="30s"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('admin.students.*') ? 'bg-red-50 text-japan-red font-black shadow-xs ring-1 ring-red-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Users class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Siswa</span>
+                        </Link>
+                        <Link :href="route('admin.senseis.index')" prefetch cache-for="30s"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('admin.senseis.*') ? 'bg-red-50 text-japan-red font-black shadow-xs ring-1 ring-red-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Award class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Sensei</span>
+                        </Link>
+                        <Link :href="route('admin.master.batches.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('admin.master.batches.*') ? 'bg-red-50 text-japan-red font-black shadow-xs ring-1 ring-red-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <GraduationCap class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Angkatan</span>
+                        </Link>
+                        <Link :href="route('admin.master.learning-indicators.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('admin.master.learning-indicators.*') ? 'bg-rose-50 text-rose-800 font-black shadow-xs ring-1 ring-rose-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Target class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Indikator</span>
+                        </Link>
+                        <Link :href="route('admin.website-settings.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('admin.website-settings.*') ? 'bg-red-50 text-japan-red font-black shadow-xs ring-1 ring-red-100 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Globe class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">CMS</span>
+                        </Link>
+                        <Link :href="route('admin.database.index')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('admin.database.*') ? 'bg-slate-100 text-slate-900 font-black shadow-xs ring-1 ring-slate-200 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <Database class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Database</span>
+                        </Link>
+                        <Link :href="route('profile.edit')" prefetch cache-for="1m"
+                            class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
+                            :class="route().current('profile.edit') ? 'bg-slate-100 text-slate-900 font-black shadow-xs ring-1 ring-slate-200 scale-102' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
+                            <User class="w-5 h-5" />
+                            <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">Profil</span>
+                        </Link>
+                    </template>
+                </div>
+            </div>
+            </nav>
+        </Teleport>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import MasayumeLogo from '@/Components/MasayumeLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -1089,7 +1235,26 @@ const toggleSidebar = () => {
     }
 };
 
+const bottomSafeOffset = ref('0px');
+
+const updateMobileViewport = () => {
+    if (typeof window !== 'undefined' && window.visualViewport) {
+        const diff = window.innerHeight - (window.visualViewport.height + window.visualViewport.offsetTop);
+        if (diff > 0) {
+            bottomSafeOffset.value = `${Math.round(diff)}px`;
+        } else {
+            bottomSafeOffset.value = '0px';
+        }
+    }
+};
+
 onMounted(() => {
+    if (typeof window !== 'undefined' && window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateMobileViewport);
+        window.visualViewport.addEventListener('scroll', updateMobileViewport);
+        window.addEventListener('scroll', updateMobileViewport);
+        updateMobileViewport();
+    }
     try {
         const saved = localStorage.getItem('sidebar_collapsed');
         if (saved !== null) {
@@ -1179,5 +1344,13 @@ const currentBreadcrumbTitle = computed(() => {
     if (route().current('siswa.journey.*')) return isJapanese.value ? 'ビザ・出国進捗' : 'Progres Visa & Penyaluran';
 
     return isJapanese.value ? 'ダッシュボード' : 'Dashboard';
+});
+
+onUnmounted(() => {
+    if (typeof window !== 'undefined' && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateMobileViewport);
+        window.visualViewport.removeEventListener('scroll', updateMobileViewport);
+        window.removeEventListener('scroll', updateMobileViewport);
+    }
 });
 </script>
