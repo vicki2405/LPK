@@ -51,62 +51,28 @@
                 </div>
             </div>
 
-            <!-- ================= STATS SUMMARY CARDS (SHOWN ON OVERVIEW) ================= -->
-            <div v-if="!selectedTopic" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider">
-                            {{ isJapanese ? '登録漢字総数' : 'Total Huruf Kanji' }}
-                        </span>
-                        <span class="text-lg sm:text-2xl font-black text-slate-900 mt-0.5 block font-mono">
-                            {{ stats.total ?? 0 }}
-                        </span>
+            <!-- ================= COMPACT STATS STRIP ================= -->
+            <div v-if="!selectedTopic" class="flex flex-wrap items-center justify-between gap-3 bg-white px-4 sm:px-5 py-3 rounded-2xl border border-slate-200/90 shadow-2xs">
+                <div class="flex flex-wrap items-center gap-4 sm:gap-6 text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span class="text-slate-500">Total Kanji: <strong class="font-bold text-slate-900 font-mono text-sm ml-0.5">{{ stats.total ?? 0 }}</strong></span>
                     </div>
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                        <Languages class="w-4 h-4 sm:w-5 sm:h-5" />
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span class="text-slate-500">Wadah Topik: <strong class="font-bold text-slate-900 font-mono text-sm ml-0.5">{{ stats.total_topics ?? topics.length }}</strong></span>
                     </div>
-                </div>
-
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider">
-                            {{ isJapanese ? 'トピックグループ数' : 'Wadah Topik Kanji' }}
-                        </span>
-                        <span class="text-lg sm:text-2xl font-black text-blue-600 mt-0.5 block font-mono">
-                            {{ stats.total_topics ?? topics.length }}
-                        </span>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-slate-500">Level N5: <strong class="font-bold text-slate-900 font-mono text-sm ml-0.5">{{ stats.total_n5 ?? 0 }}</strong></span>
                     </div>
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                        <FolderTree class="w-4 h-4 sm:w-5 sm:h-5" />
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span class="text-slate-500">Level N4: <strong class="font-bold text-slate-900 font-mono text-sm ml-0.5">{{ stats.total_n4 ?? 0 }}</strong></span>
                     </div>
                 </div>
-
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider">
-                            {{ isJapanese ? 'N5基礎漢字' : 'Kanji Level N5' }}
-                        </span>
-                        <span class="text-lg sm:text-2xl font-black text-emerald-600 mt-0.5 block font-mono">
-                            {{ stats.total_n5 ?? 0 }}
-                        </span>
-                    </div>
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                        <Sparkles class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                </div>
-
-                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex items-center justify-between">
-                    <div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-400 block uppercase tracking-wider">
-                            {{ isJapanese ? 'N4実務漢字' : 'Kanji Level N4' }}
-                        </span>
-                        <span class="text-lg sm:text-2xl font-black text-purple-600 mt-0.5 block font-mono">
-                            {{ stats.total_n4 ?? 0 }}
-                        </span>
-                    </div>
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-                        <Bookmark class="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
+                <div class="text-[11px] font-bold text-slate-400 font-jp hidden md:block">
+                    {{ isJapanese ? '漢字マスターデータベース' : 'Database Master Huruf Kanji' }}
                 </div>
             </div>
 
@@ -164,7 +130,7 @@
                                     <th class="py-3 px-4 min-w-[200px]">Nama Topik & Deskripsi</th>
                                     <th class="py-3 px-4 min-w-[260px]">Karakter Kanji di Topik</th>
                                     <th class="py-3 px-4 w-28 text-center">Jumlah Kanji</th>
-                                    <th class="py-3 px-4 w-48 text-right">Aksi Manajemen</th>
+                                    <th class="py-3 px-4 w-36 text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
@@ -185,33 +151,35 @@
                                         </span>
                                     </td>
 
-                                    <!-- Topic Title & Description -->
+                                    <!-- Topic Title & Description (Clickable to open) -->
                                     <td class="py-3 px-4">
-                                        <div class="flex items-start gap-2">
-                                            <Folder class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
-                                            <div>
-                                                <span class="text-xs sm:text-sm font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors block">
-                                                    {{ topic.title }}
-                                                </span>
-                                                <span class="text-[11px] text-slate-500 line-clamp-1 block mt-0.5">
-                                                    {{ topic.description || 'Tidak ada catatan tambahan.' }}
-                                                </span>
+                                        <button 
+                                            type="button" 
+                                            @click="openTopicDetail(topic)" 
+                                            class="text-left group/title cursor-pointer block"
+                                        >
+                                            <div class="flex items-start gap-2">
+                                                <Folder class="w-4 h-4 text-indigo-500 shrink-0 mt-0.5" />
+                                                <div>
+                                                    <span class="text-xs sm:text-sm font-extrabold text-slate-900 group-hover/title:text-indigo-600 transition-colors block">
+                                                        {{ topic.title }}
+                                                    </span>
+                                                    <span class="text-[11px] text-slate-500 line-clamp-1 block mt-0.5">
+                                                        {{ topic.description || 'Tidak ada catatan tambahan.' }}
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </button>
                                     </td>
 
-                                    <!-- Sample Kanji Characters Preview Chips -->
+                                    <!-- Sample Kanji Characters Preview (Clean inline typography) -->
                                     <td class="py-3 px-4">
-                                        <div v-if="topic.kanjis && topic.kanjis.length > 0" class="flex flex-wrap items-center gap-1.5">
-                                            <span 
-                                                v-for="k in topic.kanjis.slice(0, 8)" 
-                                                :key="k.id"
-                                                class="w-7 h-7 flex items-center justify-center bg-indigo-50 border border-indigo-100 rounded-lg text-sm font-jp font-black text-indigo-950 shadow-2xs"
-                                            >
-                                                {{ k.kanji }}
+                                        <div v-if="topic.kanjis && topic.kanjis.length > 0" class="flex items-center gap-1.5 flex-wrap">
+                                            <span class="font-jp text-sm font-bold text-slate-800 tracking-wider">
+                                                {{ topic.kanjis.slice(0, 8).map(k => k.kanji).join(' ・ ') }}
                                             </span>
-                                            <span v-if="topic.kanjis.length > 8" class="text-[10px] text-slate-400 font-bold font-mono pl-1">
-                                                +{{ topic.kanjis.length - 8 }}
+                                            <span v-if="topic.kanjis.length > 8" class="text-[10px] text-slate-400 font-bold font-mono">
+                                                (+{{ topic.kanjis.length - 8 }})
                                             </span>
                                         </div>
                                         <span v-else class="text-[11px] text-slate-400 italic">
@@ -226,7 +194,7 @@
                                         </span>
                                     </td>
 
-                                    <!-- Action Buttons -->
+                                    <!-- Action Buttons (No redundant + button, clean 3 actions) -->
                                     <td class="py-3 px-4 text-right">
                                         <div class="flex items-center justify-end gap-1.5">
                                             <!-- Open Topic Detail -->
@@ -239,15 +207,6 @@
                                                 <Eye class="w-3.5 h-3.5" />
                                                 <span>Buka</span>
                                             </button>
-
-                                            <!-- Add Kanji to this Topic -->
-                                            <Link 
-                                                :href="route('sensei.kanjis.create', { topic_id: topic.id, level: topic.level })"
-                                                class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors"
-                                                title="Tambah kanji ke topik ini"
-                                            >
-                                                <PlusCircle class="w-3.5 h-3.5" />
-                                            </Link>
 
                                             <!-- Edit Topic -->
                                             <button 
@@ -327,7 +286,7 @@
 
                 <!-- Empty State Inside Topic -->
                 <div v-if="!kanjis.data || kanjis.data.length === 0" class="bg-white rounded-3xl p-12 text-center border border-slate-200/80 shadow-xs space-y-4 max-w-lg mx-auto">
-                    <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto text-2xl">
+                    <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto text-2xl font-jp">
                         字
                     </div>
                     <div>
@@ -345,7 +304,7 @@
                     </Link>
                 </div>
 
-                <!-- Table View Mode for Kanji Inside Topic -->
+                <!-- Table View Mode for Kanji Inside Topic (Combined Readings & Clean Layout) -->
                 <div v-else class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs">
@@ -353,10 +312,8 @@
                                 <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
                                     <th class="py-3 px-4 w-12 text-center">#</th>
                                     <th class="py-3 px-4 w-20 text-center">Huruf Kanji</th>
-                                    <th class="py-3 px-4 min-w-[150px]">Onyomi (音読み)</th>
-                                    <th class="py-3 px-4 min-w-[150px]">Kunyomi (訓読み)</th>
+                                    <th class="py-3 px-4 min-w-[180px]">Cara Baca (音読み / 訓読み)</th>
                                     <th class="py-3 px-4 min-w-[200px]">Arti Bahasa Indonesia</th>
-                                    <th class="py-3 px-4 w-24 text-center">Goresan</th>
                                     <th class="py-3 px-4 w-24 text-right">Aksi</th>
                                 </tr>
                             </thead>
@@ -378,24 +335,27 @@
                                         </div>
                                     </td>
 
-                                    <!-- Onyomi -->
+                                    <!-- Combined Readings (Onyomi / Kunyomi) -->
                                     <td class="py-3 px-4 font-jp">
-                                        <span class="text-xs font-semibold text-indigo-700 block">{{ k.onyomi || '-' }}</span>
+                                        <div class="space-y-1">
+                                            <div v-if="k.onyomi" class="flex items-center gap-1.5">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200/60 font-sans">音</span>
+                                                <span class="text-xs font-bold text-slate-800">{{ k.onyomi }}</span>
+                                            </div>
+                                            <div v-if="k.kunyomi" class="flex items-center gap-1.5">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 font-sans">訓</span>
+                                                <span class="text-xs font-semibold text-slate-700">{{ k.kunyomi }}</span>
+                                            </div>
+                                            <div v-if="!k.onyomi && !k.kunyomi" class="text-xs text-slate-500 font-sans">
+                                                {{ k.hiragana || '-' }}
+                                            </div>
+                                        </div>
                                     </td>
 
-                                    <!-- Kunyomi -->
-                                    <td class="py-3 px-4 font-jp">
-                                        <span class="text-xs font-semibold text-rose-700 block">{{ k.kunyomi || '-' }}</span>
-                                    </td>
-
-                                    <!-- Meaning -->
-                                    <td class="py-3 px-4 text-slate-800 font-semibold max-w-xs">
-                                        {{ k.meaning_id || k.meaning }}
-                                    </td>
-
-                                    <!-- Stroke Count -->
-                                    <td class="py-3 px-4 text-center font-mono font-medium text-slate-600">
-                                        {{ k.stroke_count ? `${k.stroke_count} 画` : '-' }}
+                                    <!-- Meaning & Notes -->
+                                    <td class="py-3 px-4 max-w-xs">
+                                        <span class="text-xs font-bold text-slate-900 block">{{ k.meaning_id || k.meaning }}</span>
+                                        <span v-if="k.notes" class="text-[11px] text-slate-500 font-jp line-clamp-1 mt-0.5">{{ k.notes }}</span>
                                     </td>
 
                                     <!-- Actions -->
@@ -443,7 +403,7 @@
                 </div>
             </div>
 
-            <!-- ================= MODAL TOPIC KANJI ================= -->
+            <!-- ================= MODAL TOPIC KANJI (NAMA TOPIK OPSIONAL) ================= -->
             <div v-if="showTopicModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
                 <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in fade-in zoom-in-95 duration-150">
                     <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -473,7 +433,7 @@
                             <select 
                                 v-model="topicForm.level" 
                                 required
-                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
                             >
                                 <option v-for="lvl in languageLevels" :key="lvl.code" :value="lvl.code">
                                     {{ lvl.code }} - {{ lvl.name }}
@@ -481,18 +441,23 @@
                             </select>
                         </div>
 
-                        <!-- Nama / Judul Topik -->
+                        <!-- Nama / Judul Topik (OPSIONAL) -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">
-                                Nama Topik Kanji *
-                            </label>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-bold text-slate-700">
+                                    Nama Topik Kanji (Opsional)
+                                </label>
+                                <span class="text-[10px] text-slate-400 font-mono">Bisa dikosongkan</span>
+                            </div>
                             <input 
                                 type="text" 
                                 v-model="topicForm.title" 
-                                required
-                                placeholder="Contoh: Hari & Elemen Alam, Angka Dasar, dll."
+                                placeholder="Kosongkan untuk otomatis (contoh: Topik N5 #1)"
                                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                             />
+                            <p class="text-[11px] text-slate-400 mt-1">
+                                Jika dikosongkan, sistem otomatis membuat nama berurutan sesuai level.
+                            </p>
                         </div>
 
                         <!-- Deskripsi Topik -->

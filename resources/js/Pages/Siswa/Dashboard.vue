@@ -2,7 +2,7 @@
     <Head title="Siswa Training Camp - Masayume" />
 
     <AuthenticatedLayout>
-        <div class="space-y-8 animate-fade-in pb-12">
+        <div class="space-y-8 animate-fade-in pb-24 md:pb-12">
             <!-- ================= SISWA HERO BANNER (LEFT-ALIGNED & RESPONSIVE) ================= -->
             <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white p-4 sm:p-7 md:p-8 shadow-2xl border border-slate-800/80">
                 <!-- Subtle Japanese Kanji Ambient Watermark -->
@@ -71,34 +71,6 @@
                                 <p class="text-[11px] sm:text-xs md:text-sm text-slate-400 font-medium text-left line-clamp-2 sm:line-clamp-none">
                                     LPK Masayume • Program Persiapan Kerja Jepang (N4 / A2)
                                 </p>
-                            </div>
-
-                            <!-- Fast Navigation Buttons (Rata Kiri) -->
-                            <div class="flex items-center justify-start gap-1.5 sm:gap-2 pt-0.5 flex-wrap text-left">
-                                <Link 
-                                    :href="route('profile.edit')"
-                                    class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] sm:text-xs font-bold transition-all border border-white/10"
-                                >
-                                    <span>👤 Biodata CV</span>
-                                </Link>
-                                <Link 
-                                    :href="route('siswa.flashcards.index')"
-                                    class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] sm:text-xs font-bold transition-all border border-amber-500/30"
-                                >
-                                    <span>🃏 Flashcards Kotoba</span>
-                                </Link>
-                                <Link 
-                                    :href="route('siswa.kanjis.index')"
-                                    class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-[11px] sm:text-xs font-bold transition-all border border-indigo-500/30"
-                                >
-                                    <span>🈸 Kartu Kanji</span>
-                                </Link>
-                                <Link 
-                                    :href="route('siswa.exams.index')"
-                                    class="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-japan-red/20 hover:bg-japan-red/30 text-rose-300 text-[11px] sm:text-xs font-bold transition-all border border-japan-red/30"
-                                >
-                                    <span>🎯 Ujian CBT N4</span>
-                                </Link>
                             </div>
                         </div>
                     </div>
@@ -176,19 +148,14 @@
                         </div>
                     </div>
 
-                    <div class="space-y-2 pt-2">
+                    <div class="pt-2">
                         <Link 
                             :href="route('siswa.lms.index')"
-                            class="w-full py-2.5 sm:py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5 cursor-pointer"
+                            class="w-full py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                         >
-                            <BookOpen class="w-3.5 h-3.5 text-amber-400" />
-                            <span>📖 Buka Modul Kurikulum</span>
-                        </Link>
-                        <Link 
-                            :href="route('siswa.lms.index')"
-                            class="w-full py-2 rounded-xl text-center block text-xs font-black text-slate-600 hover:text-slate-950 transition-colors"
-                        >
-                            Eksplorasi Bab 1 - 50 →
+                            <BookOpen class="w-4 h-4 text-amber-400" />
+                            <span>Buka Modul Kurikulum (Bab 1 - 50)</span>
+                            <span class="text-slate-400 ml-0.5">→</span>
                         </Link>
                     </div>
                 </div>
@@ -234,19 +201,14 @@
                         </div>
                     </div>
 
-                    <div class="space-y-2 pt-2">
+                    <div class="pt-2">
                         <Link 
                             :href="route('siswa.flashcards.index')"
-                            class="w-full py-2.5 sm:py-3 rounded-xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-1.5 cursor-pointer"
+                            class="w-full py-3 rounded-2xl bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
                         >
-                            <Layers class="w-3.5 h-3.5 text-amber-400" />
-                            <span>🃏 Buka Flashcard Gym & Kuis</span>
-                        </Link>
-                        <Link 
-                            :href="route('siswa.flashcards.index')"
-                            class="w-full py-2 rounded-xl text-center block text-xs font-black text-slate-600 hover:text-slate-950 transition-colors"
-                        >
-                            Mulai Sesi Hafalan Harian →
+                            <Layers class="w-4 h-4 text-amber-400" />
+                            <span>Buka Flashcards & Kuis Kilat</span>
+                            <span class="text-slate-400 ml-0.5">→</span>
                         </Link>
                     </div>
                 </div>
@@ -318,18 +280,33 @@
             </div>
 
             <!-- ================= PERSONAL CBT EXAM GRADEBOOK ================= -->
-            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-base font-black text-slate-950 flex items-center gap-2">
-                        <Award class="w-5 h-5 text-emerald-600" />
-                        Rekam Jejak & Rapor Nilai CBT Anda
-                    </h3>
-                    <span class="text-xs font-bold text-slate-500">
-                        {{ recentSessions?.length || 0 }} Kali Ujian
-                    </span>
+            <div class="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+                    <div>
+                        <h3 class="text-base font-black text-slate-950 flex items-center gap-2">
+                            <Award class="w-5 h-5 text-emerald-600 shrink-0" />
+                            <span>Rekam Jejak & Rapor Nilai CBT Anda</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Histori simulasi ujian resmi yang telah Anda ikuti.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            {{ recentSessions?.length || 0 }} Kali Ujian
+                        </span>
+                        <Link 
+                            :href="route('siswa.rapor.index')"
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors"
+                        >
+                            <span>Buka Rapor Lengkap</span>
+                            <ArrowRight class="w-3.5 h-3.5" />
+                        </Link>
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <!-- Desktop Table View (hidden on mobile, visible on md and up) -->
+                <div class="hidden md:block overflow-x-auto">
                     <table class="w-full text-left text-xs text-slate-700">
                         <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                             <tr>
@@ -371,11 +348,71 @@
                             </tr>
                             <tr v-if="!recentSessions || recentSessions.length === 0">
                                 <td colspan="5" class="py-8 text-center text-slate-400">
-                                    Anda belum memiliki riwayat ujian CBT. Klik tombol "Mulai Ujian Fullscreen" di atas untuk mengerjakan tugas ujian dari Sensei.
+                                    Anda belum memiliki riwayat ujian CBT. Klik tombol "Kerjakan CBT Sekarang" di atas untuk mengerjakan tugas ujian dari Sensei.
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Card Feed View (visible on mobile, hidden on md and up) -->
+                <div class="block md:hidden space-y-3">
+                    <div 
+                        v-for="session in recentSessions" 
+                        :key="session.id"
+                        class="p-4 rounded-2xl border border-slate-200/90 bg-white hover:border-slate-300 transition-all shadow-2xs space-y-3"
+                    >
+                        <div class="flex items-start justify-between gap-2">
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                                    {{ session.created_at ? new Date(session.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-' }}
+                                </span>
+                                <h4 class="font-black text-xs text-slate-900 leading-snug mt-0.5">
+                                    {{ session.exam?.title }}
+                                </h4>
+                            </div>
+                            <span 
+                                class="shrink-0 px-2.5 py-1 rounded-full font-bold text-[10px]"
+                                :class="session.is_passed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                            >
+                                {{ session.is_passed ? '合格 Lulus' : '不合格 Belum Lulus' }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-medium block">Skor Diperoleh</span>
+                                <span class="font-black text-sm text-slate-900">
+                                    {{ session.total_score || 0 }} <span class="text-[11px] text-slate-400 font-normal">/ {{ session.exam?.max_score || 180 }}</span>
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-slate-400 font-medium block">Integritas</span>
+                                <span v-if="session.is_disqualified" class="text-[11px] font-bold text-rose-700">
+                                    ⛔ Diskualifikasi
+                                </span>
+                                <span v-else-if="session.violation_count > 0" class="text-[11px] font-bold text-amber-700">
+                                    ⚠️ {{ session.violation_count }}x Pindah Tab
+                                </span>
+                                <span v-else class="text-[11px] font-bold text-emerald-700">
+                                    🟢 Tertib
+                                </span>
+                            </div>
+                        </div>
+
+                        <Link 
+                            :href="route('siswa.rapor.index')"
+                            class="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-center block text-xs font-bold transition-colors border border-slate-200/80"
+                        >
+                            Lihat Rincian Butir Soal di Rapor →
+                        </Link>
+                    </div>
+
+                    <div v-if="!recentSessions || recentSessions.length === 0" class="py-8 px-4 text-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                        <Clock class="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                        <p class="text-xs font-bold text-slate-600">Belum Ada Riwayat Ujian</p>
+                        <p class="text-[11px] text-slate-400 mt-1">Anda belum mengerjakan tugas simulasi CBT.</p>
+                    </div>
                 </div>
             </div>
 
@@ -386,9 +423,6 @@
                         <CheckCircle2 class="w-5 h-5 text-emerald-600" />
                         Status Dokumen & 7 Tahapan Penyaluran Anda ke Jepang
                     </h3>
-                    <Link :href="route('siswa.journey.index')" class="text-xs font-bold text-japan-red hover:underline">
-                        Lihat Rincian Perjalanan →
-                    </Link>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -425,7 +459,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { confirmDialog } from '@/Utils/alert';
 import { 
     Clock, BookOpen, Layers, CheckCircle2, 
-    Award, Users, Activity, FileText, PlaneTakeoff 
+    Award, Users, Activity, FileText, PlaneTakeoff, ArrowRight 
 } from 'lucide-vue-next';
 
 const page = usePage();

@@ -22,6 +22,7 @@
     "dependencies": {
         "@esbuild/linux-x64": "^0.28.2",
         "@rollup/rollup-linux-x64-gnu": "^4.63.5",
+        "hanzi-writer": "^3.7.3",
         "lucide-vue-next": "^0.577.0",
         "sweetalert2": "^11.26.25"
     }

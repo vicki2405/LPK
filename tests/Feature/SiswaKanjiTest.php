@@ -80,4 +80,27 @@ class SiswaKanjiTest extends TestCase
             ->where('kanjis.0.kanji', '月')
         );
     }
+
+    public function test_siswa_can_access_kanji_full_deck_with_topic_id_all(): void
+    {
+        Kanji::create([
+            'kanji' => '水',
+            'hiragana' => 'みず',
+            'meaning_id' => 'Air',
+            'level' => 'N5',
+        ]);
+
+        $response = $this->actingAs($this->siswa)->get(route('siswa.kanjis.index', [
+            'level' => 'N5',
+            'topic_id' => 'all',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('Siswa/Kanji/Index')
+            ->where('selectedTopicId', 'all')
+            ->where('selectedLevel', 'N5')
+            ->has('kanjis', 1)
+        );
+    }
 }

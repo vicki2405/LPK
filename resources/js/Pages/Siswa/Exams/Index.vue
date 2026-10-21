@@ -2,7 +2,7 @@
     <Head title="Portal Ujian CBT - Masayume LPK" />
 
     <AuthenticatedLayout>
-        <div class="space-y-6 animate-fade-in pb-12">
+        <div class="space-y-6 animate-fade-in pb-24 md:pb-12">
 
             <!-- ===== HEADER SECTION ===== -->
             <div class="bg-gradient-to-br from-white via-slate-50 to-red-50/30 border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">

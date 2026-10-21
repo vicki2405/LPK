@@ -70,7 +70,7 @@ class KanjiController extends Controller
         return Inertia::render('Siswa/Kanji/Index', [
             'levels' => $levels,
             'topics' => $topics,
-            'selectedTopicId' => $selectedTopicId ? (int)$selectedTopicId : null,
+            'selectedTopicId' => $selectedTopicId === 'all' ? 'all' : ($selectedTopicId ? (int)$selectedTopicId : null),
             'selectedLevel' => $selectedLevel,
             'kanjis' => $kanjis,
             'stats' => $stats,

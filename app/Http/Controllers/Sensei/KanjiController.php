@@ -84,25 +84,28 @@ class KanjiController extends Controller
     {
         $validated = $request->validate([
             'level' => 'required|string|max:20',
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
         ], [
-            'title.required' => 'Nama topik wajib diisi.',
             'level.required' => 'Level bahasa wajib dipilih.',
         ]);
 
         $maxSort = Topic::forKanji()->where('level', $validated['level'])->max('sort_order') ?? 0;
+        $nextOrder = $maxSort + 1;
+        $title = !empty(trim($validated['title'] ?? ''))
+            ? trim($validated['title'])
+            : "Topik {$validated['level']} #{$nextOrder}";
 
         Topic::create([
             'type' => 'kanji',
             'level' => $validated['level'],
-            'title' => trim($validated['title']),
+            'title' => $title,
             'description' => $validated['description'] ? trim($validated['description']) : null,
-            'sort_order' => $maxSort + 1,
+            'sort_order' => $nextOrder,
             'created_by' => $request->user()?->id,
         ]);
 
-        return redirect()->back()->with('success', "Topik Kanji [{$validated['title']}] berhasil dibuat!");
+        return redirect()->back()->with('success', "Topik Kanji [{$title}] berhasil dibuat!");
     }
 
     /**
@@ -112,16 +115,19 @@ class KanjiController extends Controller
     {
         $validated = $request->validate([
             'level' => 'required|string|max:20',
-            'title' => 'required|string|max:255',
+            'title' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
         ], [
-            'title.required' => 'Nama topik wajib diisi.',
             'level.required' => 'Level bahasa wajib dipilih.',
         ]);
 
+        $title = !empty(trim($validated['title'] ?? ''))
+            ? trim($validated['title'])
+            : $topic->title;
+
         $topic->update([
             'level' => $validated['level'],
-            'title' => trim($validated['title']),
+            'title' => $title,
             'description' => $validated['description'] ? trim($validated['description']) : null,
         ]);
 

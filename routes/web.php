@@ -177,7 +177,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->middleware('throttle:10,1');
         Route::get('cbt/{session}/result', [\App\Http\Controllers\Siswa\CbtController::class, 'result'])->name('cbt.result');
 
-        // 4. Progres Penyaluran & Visa Jepang
+        // 4. Rapor & Capaian Belajar Siswa (CBT & Penilaian Sensei)
+        Route::get('rapor', [\App\Http\Controllers\Siswa\RaporController::class, 'index'])->name('rapor.index');
         Route::get('journey', [\App\Http\Controllers\Siswa\JourneyController::class, 'index'])->name('journey.index');
     });
 

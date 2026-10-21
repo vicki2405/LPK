@@ -22,4 +22,7 @@ Setiap interaksi dengan pengguna harus melewati 3 tahapan berikut tanpa jalan pi
 1. **Patuhi Master Plan**: Seluruh implementasi harus berpedoman pada `MASTER_PLAN_LMS_LPK.md`.
 2. **Kedaulatan Sensei**: Sensei adalah pemegang kendali utama atas kurikulum, materi bab, bank soal, dan jadwal ujian CBT.
 3. **Standar CBT N4**: Engine CBT harus bebas jeda (zero-latency navigation), mendukung `<ruby>` furigana, audio listening anti-cheat, dan penilaian standar kelulusan resmi.
-4. **Standar Kualitas UI/UX**: Desain modern Japan tech minimalist, responsif, tipografi rapi (*Noto Sans JP* & *Plus Jakarta Sans*), dan visual interaktif berstandar tinggi.
+4. **Standar Kualitas UI/UX & Non-Redundansi**:
+   - Desain modern *Japan tech minimalist*, responsif, tipografi rapi (*Noto Sans JP* & *Plus Jakarta Sans*).
+   - **Zero Redundansi**: Dilarang membuat tombol atau elemen dengan fungsi ganda/sama dalam satu layar.
+   - **Declutter (Bebas Visual Noise)**: Jangan menampilkan informasi/elemen yang tidak terlalu penting yang membuat tampilan berjejal, ramai, dan membingungkan pengguna.

@@ -62,14 +62,21 @@
                     <span class="text-slate-500">○ {{ session.unanswered_count }} Kosong</span>
                 </div>
 
-                <!-- Return Button -->
-                <div class="mt-8">
+                <!-- Return Buttons -->
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Link 
+                        :href="route('siswa.rapor.index')" 
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                    >
+                        <Award class="w-4 h-4" />
+                        <span>Buka Rapor & Analisis Capaian</span>
+                    </Link>
                     <Link 
                         :href="route('siswa.dashboard')" 
-                        class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-all cursor-pointer"
                     >
                         <ArrowLeft class="w-4 h-4" />
-                        <span>Kembali ke Training Camp Dashboard</span>
+                        <span>Kembali ke Dashboard</span>
                     </Link>
                 </div>
             </div>
@@ -80,7 +87,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { CheckCircle2, XCircle, ArrowLeft } from 'lucide-vue-next';
+import { CheckCircle2, XCircle, ArrowLeft, Award } from 'lucide-vue-next';
 
 defineProps({
     session: Object,

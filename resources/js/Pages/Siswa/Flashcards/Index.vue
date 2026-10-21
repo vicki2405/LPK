@@ -2,7 +2,7 @@
     <Head title="Kotoba Flashcards & Quiz Trainer - Masayume" />
 
     <AuthenticatedLayout>
-        <div class="space-y-6 animate-fade-in pb-16">
+        <div class="space-y-6 animate-fade-in pb-24 md:pb-16">
             <!-- ================= HERO HEADER BANNER ================= -->
             <div v-if="!isPracticeMode" class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-5 sm:p-7 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                 <!-- Japanese Motif Watermark -->
@@ -230,17 +230,6 @@
                         >
                             <span>⚡</span>
                             <span>Kuis Kilat</span>
-                        </button>
-                        <button 
-                            type="button"
-                            @click="activeMode = 'list'"
-                            class="flex-1 md:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-                            :class="activeMode === 'list' 
-                                ? 'bg-slate-900 text-white shadow-xs font-black' 
-                                : 'text-slate-600 hover:text-slate-900'"
-                        >
-                            <span>📖</span>
-                            <span>Daftar Kata</span>
                         </button>
                     </div>
                 </div>
@@ -477,115 +466,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- SUB-VIEW 3: TABLE / VOCABULARY LIST -->
-                <div v-else class="space-y-4">
-                    <!-- Search inside Active Vocabs -->
-                    <div class="flex items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
-                        <div class="relative flex-1 max-w-md">
-                            <Search class="w-3.5 h-3.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                            <input 
-                                type="text" 
-                                v-model="searchListQuery" 
-                                placeholder="Cari kanji / hiragana / arti..." 
-                                class="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs focus:bg-white focus:outline-none"
-                            />
-                        </div>
-                        <span class="text-xs font-bold text-slate-500 whitespace-nowrap">
-                            {{ filteredVocabList.length }} Kosakata
-                        </span>
-                    </div>
-
-                    <!-- Table Container -->
-                    <div class="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
-                        <div class="hidden md:block overflow-x-auto">
-                            <table class="w-full text-left text-xs text-slate-700">
-                                <thead class="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                                    <tr>
-                                        <th class="py-3.5 px-4 w-12 text-center">No</th>
-                                        <th class="py-3.5 px-4">Kanji & Hiragana</th>
-                                        <th class="py-3.5 px-4">Arti Indonesia</th>
-                                        <th class="py-3.5 px-4">Jenis Kata</th>
-                                        <th class="py-3.5 px-4">Contoh Kalimat (Reibun)</th>
-                                        <th class="py-3.5 px-4 text-center">Suara</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    <tr v-for="(v, idx) in filteredVocabList" :key="v.id" class="hover:bg-slate-50/70 transition-colors">
-                                        <td class="py-3.5 px-4 text-center font-bold text-slate-400 font-mono">
-                                            {{ idx + 1 }}
-                                        </td>
-                                        <td class="py-3.5 px-4">
-                                            <div class="flex items-baseline gap-2">
-                                                <span v-if="v.kanji" class="text-base font-black text-slate-900 font-jp">{{ v.kanji }}</span>
-                                                <span class="text-sm font-bold text-rose-600 font-jp" :class="{ 'text-base': !v.kanji }">{{ v.hiragana }}</span>
-                                            </div>
-                                            <span v-if="v.romaji" class="text-[11px] font-mono text-slate-400 block mt-0.5">{{ v.romaji }}</span>
-                                        </td>
-                                        <td class="py-3.5 px-4 font-bold text-slate-900 text-sm">
-                                            {{ v.meaning_id }}
-                                        </td>
-                                        <td class="py-3.5 px-4">
-                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                                                {{ v.word_type || 'Kata' }}
-                                            </span>
-                                        </td>
-                                        <td class="py-3.5 px-4 max-w-sm">
-                                            <div v-if="v.example_sentence_jp" class="space-y-0.5 text-slate-600">
-                                                <p class="font-jp text-xs font-semibold text-slate-800">{{ v.example_sentence_jp }}</p>
-                                                <p v-if="v.example_sentence_id" class="text-[11px] text-slate-500 italic">{{ v.example_sentence_id }}</p>
-                                            </div>
-                                            <span v-else class="text-slate-300">-</span>
-                                        </td>
-                                        <td class="py-3.5 px-4 text-center">
-                                            <button 
-                                                type="button" 
-                                                @click="speakJapanese(v.hiragana || v.kanji, v.audio_file)"
-                                                class="p-2 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center shadow-2xs"
-                                                :class="isPlayingAudio && currentlyPlayingText === (v.hiragana || v.kanji) 
-                                                    ? 'bg-amber-100 text-amber-700 animate-pulse ring-2 ring-amber-300' 
-                                                    : 'bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-600'"
-                                                title="Dengarkan Pelafalan Asli Jepang (Tokyo 🔊)"
-                                            >
-                                                <Volume2 class="w-4 h-4" />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="filteredVocabList.length === 0">
-                                        <td colspan="6" class="py-12 text-center text-slate-400">
-                                            Tidak ada kosakata yang cocok dengan pencarian.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Mobile List -->
-                        <div class="block md:hidden divide-y divide-slate-100">
-                            <div v-for="v in filteredVocabList" :key="'mob-' + v.id" class="p-4 space-y-2.5">
-                                <div class="flex items-start justify-between gap-2">
-                                    <div class="space-y-0.5">
-                                        <div class="flex items-baseline gap-2">
-                                            <span v-if="v.kanji" class="text-lg font-black text-slate-950 font-jp">{{ v.kanji }}</span>
-                                            <span class="text-sm font-bold text-rose-600 font-jp" :class="{ 'text-lg': !v.kanji }">{{ v.hiragana }}</span>
-                                        </div>
-                                        <span v-if="v.romaji" class="text-xs font-mono text-slate-400 block">{{ v.romaji }}</span>
-                                    </div>
-                                    <button 
-                                        type="button" 
-                                        @click="speakJapanese(v.hiragana || v.kanji, v.audio_file)"
-                                        class="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all cursor-pointer"
-                                    >
-                                        <Volume2 class="w-4 h-4" />
-                                    </button>
-                                </div>
-                                <div class="bg-amber-50/60 rounded-xl px-3 py-2 border border-amber-100 text-xs font-bold text-slate-900">
-                                    {{ v.meaning_id }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
         </div>
@@ -635,14 +515,13 @@ const props = defineProps({
     },
 });
 
-// Mode: 'flashcard' | 'quiz' | 'list'
+// Mode: 'flashcard' | 'quiz'
 const activeMode = ref('flashcard');
 
 // Practice Mode state (true = in focused arena, false = in topic lobby)
 const isPracticeMode = ref(Boolean(props.selectedTopicId));
 
 const searchTopicQuery = ref('');
-const searchListQuery = ref('');
 
 // Filter topics reactive
 const filteredTopics = computed(() => {
@@ -724,17 +603,6 @@ const isFlipped = ref(false);
 
 const activeVocabList = computed(() => {
     return props.vocabularies || [];
-});
-
-const filteredVocabList = computed(() => {
-    if (!searchListQuery.value.trim()) return activeVocabList.value;
-    const q = searchListQuery.value.toLowerCase().trim();
-    return activeVocabList.value.filter(v => 
-        (v.hiragana && v.hiragana.toLowerCase().includes(q)) ||
-        (v.kanji && v.kanji.toLowerCase().includes(q)) ||
-        (v.romaji && v.romaji.toLowerCase().includes(q)) ||
-        (v.meaning_id && v.meaning_id.toLowerCase().includes(q))
-    );
 });
 
 const currentVocab = computed(() => {

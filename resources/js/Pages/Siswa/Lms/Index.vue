@@ -2,7 +2,7 @@
     <Head title="Materi Kurikulum LMS (Bab 1 - 50) - Masayume" />
 
     <AuthenticatedLayout>
-        <div class="space-y-6 animate-fade-in pb-12">
+        <div class="space-y-6 animate-fade-in pb-24 md:pb-12">
             <!-- Header Banner -->
             <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-xl relative overflow-hidden">
                 <div class="relative z-10 max-w-2xl">

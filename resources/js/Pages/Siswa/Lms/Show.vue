@@ -2,7 +2,7 @@
     <Head :title="`第${chapter.chapter_number}課: ${chapter.title} - Ruang Belajar Siswa`" />
 
     <AuthenticatedLayout>
-        <div class="space-y-6 animate-fade-in pb-20">
+        <div class="space-y-6 animate-fade-in pb-24 md:pb-16">
 
             <!-- ================= 1. TOP MINIMALIST HEADER ================= -->
             <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">

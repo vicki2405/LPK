@@ -105,6 +105,22 @@ class SenseiTopicManagementTest extends TestCase
         ]);
     }
 
+    public function test_sensei_can_create_kanji_topic_with_empty_title_auto_generated(): void
+    {
+        $response = $this->actingAs($this->sensei)->post(route('sensei.kanjis.topics.store'), [
+            'level' => 'N4',
+            'title' => '',
+            'description' => 'Topik tanpa judul manual',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('topics', [
+            'type' => 'kanji',
+            'level' => 'N4',
+            'title' => 'Topik N4 #1',
+        ]);
+    }
+
     public function test_vocabulary_can_be_associated_with_topic(): void
     {
         $topic = Topic::create([

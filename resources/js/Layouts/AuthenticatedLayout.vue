@@ -532,17 +532,17 @@
                         </div>
                     </Link>
 
-                    <!-- 4. Progres Penyaluran & Visa -->
-                    <Link :href="route('siswa.journey.index')" prefetch cache-for="1m"
-                        class="group relative flex items-center gap-3 rounded-xl text-xs font-bold transition-colors"
+                    <!-- 4. Rapor & Capaian Belajar (CBT & Penilaian Sensei) -->
+                    <Link :href="route('siswa.rapor.index')" prefetch cache-for="1m"
+                        class="group relative flex items-center gap-3 rounded-xl text-xs font-bold transition-colors font-jp"
                         :class="[
                             isSidebarCollapsed ? 'justify-center p-2.5' : 'px-3.5 py-2.5',
-                            route().current('siswa.journey.*') ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
+                            route().current('siswa.rapor.*') || route().current('siswa.journey.*') ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'
                         ]">
-                        <CheckCircle2 class="w-4 h-4 shrink-0" :class="route().current('siswa.journey.*') ? 'text-emerald-600' : 'text-slate-500'" />
-                        <span v-if="!isSidebarCollapsed" class="truncate">{{ isJapanese ? 'ビザ・出国進捗' : 'Progres Visa & Terbang' }}</span>
+                        <Award class="w-4 h-4 shrink-0" :class="route().current('siswa.rapor.*') || route().current('siswa.journey.*') ? 'text-emerald-600' : 'text-slate-500'" />
+                        <span v-if="!isSidebarCollapsed" class="truncate">{{ isJapanese ? '成績表・習熟度' : 'Rapor & Capaian' }}</span>
                         <div v-if="isSidebarCollapsed" class="pointer-events-none absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all z-50 shadow-xl font-jp">
-                            {{ isJapanese ? 'ビザ・出国進捗' : 'Progres Visa & Terbang' }}
+                            {{ isJapanese ? '成績表・習熟度' : 'Rapor & Capaian' }}
                         </div>
                     </Link>
                 </template>
@@ -813,11 +813,11 @@
                             <Clock class="w-4 h-4 text-slate-500" />
                             <span>{{ isJapanese ? 'N4 CBT模擬試験' : 'Simulasi CBT N4' }}</span>
                         </Link>
-                        <Link :href="route('siswa.journey.index')" prefetch cache-for="1m" @click="showMobileDrawer = false"
-                            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors"
-                            :class="route().current('siswa.journey.*') ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-700 hover:bg-slate-100'">
-                            <CheckCircle2 class="w-4 h-4 text-slate-500" />
-                            <span>{{ isJapanese ? 'ビザ・出国進捗' : 'Progres Visa & Terbang' }}</span>
+                        <Link :href="route('siswa.rapor.index')" prefetch cache-for="1m" @click="showMobileDrawer = false"
+                            class="flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold transition-colors font-jp"
+                            :class="route().current('siswa.rapor.*') || route().current('siswa.journey.*') ? 'bg-emerald-50 text-emerald-700 font-black' : 'text-slate-700 hover:bg-slate-100'">
+                            <Award class="w-4 h-4 text-emerald-600" />
+                            <span>{{ isJapanese ? '成績表・到達度' : 'Rapor & Capaian Belajar' }}</span>
                         </Link>
                     </template>
                 </nav>
@@ -1050,18 +1050,18 @@
                             </span>
                         </Link>
 
-                        <!-- 5. Progres Penyaluran / Journey -->
-                        <Link :href="route('siswa.journey.index')" prefetch cache-for="1m"
+                        <!-- 5. Rapor Siswa -->
+                        <Link :href="route('siswa.rapor.index')" prefetch cache-for="1m"
                             class="flex flex-col items-center justify-center shrink-0 min-w-[4.4rem] py-1.5 px-2 rounded-2xl transition-all duration-200 snap-center group"
-                            :class="route().current('siswa.journey.*') 
+                            :class="route().current('siswa.rapor.*') || route().current('siswa.journey.*') 
                                 ? 'bg-emerald-50 text-emerald-700 font-black shadow-xs ring-1 ring-emerald-100 scale-102' 
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'">
                             <div class="relative">
-                                <CheckCircle2 class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('siswa.journey.*') ? 'scale-110' : ''" />
-                                <span v-if="route().current('siswa.journey.*')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-600 rounded-full ring-2 ring-white"></span>
+                                <Award class="w-5 h-5 transition-transform group-hover:scale-110" :class="route().current('siswa.rapor.*') || route().current('siswa.journey.*') ? 'scale-110' : ''" />
+                                <span v-if="route().current('siswa.rapor.*') || route().current('siswa.journey.*')" class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-600 rounded-full ring-2 ring-white"></span>
                             </div>
                             <span class="text-[10px] tracking-tight mt-1 truncate max-w-[4.6rem]">
-                                {{ isJapanese ? '出国進捗' : 'Journey' }}
+                                {{ isJapanese ? '成績表' : 'Rapor' }}
                             </span>
                         </Link>
 
@@ -1341,7 +1341,7 @@ const currentBreadcrumbTitle = computed(() => {
     if (route().current('siswa.kanjis.*')) return isJapanese.value ? '漢字カード' : 'Kartu Belajar Kanji';
     if (route().current('siswa.flashcards.*')) return isJapanese.value ? '単語フラッシュカード' : 'Gym Kosakata Kotoba';
     if (route().current('siswa.exams.*') || route().current('siswa.cbt.*')) return isJapanese.value ? 'CBT模擬試験' : 'Simulasi Ujian CBT';
-    if (route().current('siswa.journey.*')) return isJapanese.value ? 'ビザ・出国進捗' : 'Progres Visa & Penyaluran';
+    if (route().current('siswa.rapor.*') || route().current('siswa.journey.*')) return isJapanese.value ? '成績表・到達度' : 'Rapor & Capaian Belajar';
 
     return isJapanese.value ? 'ダッシュボード' : 'Dashboard';
 });
