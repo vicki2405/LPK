@@ -12,6 +12,9 @@ export default {
 
     theme: {
         extend: {
+            screens: {
+                'xs': '390px', // iPhone 14 Pro / standard small phones
+            },
             fontFamily: {
                 sans: ['"Plus Jakarta Sans"', '"Noto Sans JP"', ...defaultTheme.fontFamily.sans],
                 jp: ['"Noto Sans JP"', 'sans-serif'],

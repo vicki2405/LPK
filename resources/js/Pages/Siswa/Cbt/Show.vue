@@ -205,7 +205,7 @@
         <!-- ================= MAIN CBT WORKSPACE (SPLIT LAYOUT) ================= -->
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
             <!-- Question Content View Area -->
-            <main class="flex-1 overflow-y-auto p-3.5 sm:p-8 max-w-4xl mx-auto w-full space-y-4 sm:space-y-6 pb-28 sm:pb-32">
+            <main class="flex-1 overflow-y-auto p-3.5 sm:p-8 max-w-4xl mx-auto w-full space-y-4 sm:space-y-6 pb-20 sm:pb-24 md:pb-8">
                 <!-- Hero Floating Question Card -->
                 <div 
                     class="rounded-3xl sm:rounded-4xl p-4 sm:p-8 border space-y-4 sm:space-y-5 relative overflow-hidden transition-all duration-300"
@@ -492,12 +492,12 @@
                 </div>
             </main>
 
-            <!-- ================= DESKTOP PALETTE SIDEBAR ================= -->
+            <!-- ================= TABLET + DESKTOP PALETTE SIDEBAR ================= -->
             <aside 
-                class="hidden lg:flex p-6 flex-col justify-between shrink-0 transition-colors duration-300"
+                class="hidden md:flex p-4 lg:p-6 flex-col justify-between shrink-0 transition-colors duration-300"
                 :class="cbtMode === 'game' 
-                    ? 'w-80 bg-slate-900/95 border-l border-slate-800 text-white shadow-2xl' 
-                    : 'w-76 bg-white border-l border-slate-200/80 text-slate-900 shadow-[0_4px_25px_rgba(0,0,0,0.02)]'"
+                    ? 'md:w-56 lg:w-80 bg-slate-900/95 border-l border-slate-800 text-white shadow-2xl' 
+                    : 'md:w-56 lg:w-76 bg-white border-l border-slate-200/80 text-slate-900 shadow-[0_4px_25px_rgba(0,0,0,0.02)]'"
             >
                 <div>
                     <!-- Mini Progress Status -->

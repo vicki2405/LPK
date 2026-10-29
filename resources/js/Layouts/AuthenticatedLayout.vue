@@ -571,14 +571,25 @@
         </aside>
 
         <!-- ================= MOBILE SIDEBAR DRAWER (SLIDE-OVER) ================= -->
-        <div v-if="showMobileDrawer" class="fixed inset-0 z-50 md:hidden flex animate-fade-in">
-            <!-- Backdrop Overlay -->
-            <div @click="showMobileDrawer = false" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"></div>
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition-opacity duration-300 ease-out"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-200 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div v-if="showMobileDrawer" class="fixed inset-0 z-50 md:hidden flex h-[100dvh] w-full">
+                    <!-- Backdrop Overlay -->
+                    <div @click="showMobileDrawer = false" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"></div>
 
-            <!-- Drawer Content -->
-            <div class="relative w-72 max-w-[85vw] bg-white h-full flex flex-col z-10 shadow-2xl border-r border-slate-200">
+                    <!-- Drawer Content — Slide dari kiri dengan animasi -->
+                    <div
+                        class="relative w-72 max-w-[85vw] bg-white h-[100dvh] flex flex-col z-10 shadow-2xl border-r border-slate-200 animate-slide-in-left select-none"
+                    >
                 <!-- Brand Header in Drawer -->
-                <div class="h-16 px-4 flex items-center justify-between border-b border-slate-100">
+                <div class="h-16 px-4 flex items-center justify-between border-b border-slate-100 shrink-0">
                     <Link :href="dashboardRoute" prefetch cache-for="30s" @click="showMobileDrawer = false" class="group">
                         <MasayumeLogo />
                     </Link>
@@ -588,7 +599,7 @@
                 </div>
 
                 <!-- Drawer Navigation Links -->
-                <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
+                <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto overscroll-y-contain">
                     <!-- Shared: Dashboard -->
                     <Link :href="dashboardRoute" prefetch cache-for="30s"
                         @click="showMobileDrawer = false"
@@ -822,8 +833,9 @@
                     </template>
                 </nav>
             </div>
-        </div>
-
+                </div>
+            </Transition>
+        </Teleport>
         <!-- ================= MAIN CONTENT AREA ================= -->
         <div 
             class="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out"
@@ -958,15 +970,11 @@
         <!-- ================= MOBILE & TABLET BOTTOM NAVIGATION (HORIZONTAL SCROLLABLE) ================= -->
         <Teleport to="body">
             <nav 
+                v-show="!isKeyboardOpen"
                 aria-label="Navigasi Cepat Mobile"
-                class="md:hidden fixed left-0 right-0 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 z-50 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] select-none"
-                :style="{
-                    bottom: bottomSafeOffset !== '0px' ? bottomSafeOffset : 'calc(100vh - 100dvh)',
-                    paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0.5rem))',
-                    transform: 'translateZ(0)',
-                    WebkitTransform: 'translateZ(0)'
-                }"
-        >
+                class="md:hidden fixed bottom-0 left-0 right-0 w-full bg-white/95 backdrop-blur-xl border-t border-slate-200/90 z-40 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] select-none transition-transform duration-200"
+                style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem)); transform: translateZ(0); -webkit-transform: translateZ(0);"
+            >
             <div class="relative flex items-center w-full">
                 <!-- Indicator Gradient Fade Kanan (isyarat visual bahwa menu bisa digeser ke kanan) -->
                 <div class="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white via-white/80 to-transparent z-10"></div>
@@ -1180,7 +1188,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import MasayumeLogo from '@/Components/MasayumeLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
@@ -1235,25 +1243,38 @@ const toggleSidebar = () => {
     }
 };
 
-const bottomSafeOffset = ref('0px');
+// Deteksi keyboard virtual saat input form aktif di mobile
+const isKeyboardOpen = ref(false);
 
-const updateMobileViewport = () => {
-    if (typeof window !== 'undefined' && window.visualViewport) {
-        const diff = window.innerHeight - (window.visualViewport.height + window.visualViewport.offsetTop);
-        if (diff > 0) {
-            bottomSafeOffset.value = `${Math.round(diff)}px`;
-        } else {
-            bottomSafeOffset.value = '0px';
-        }
+const handleFocusIn = (e) => {
+    const target = e.target;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        isKeyboardOpen.value = true;
     }
 };
 
+const handleFocusOut = (e) => {
+    const target = e.target;
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        isKeyboardOpen.value = false;
+    }
+};
+
+// Kunci scroll body saat mobile drawer terbuka agar tidak stack/tembus scroll
+watch(showMobileDrawer, (isOpen) => {
+    if (typeof document !== 'undefined') {
+        if (isOpen) {
+            document.body.classList.add('overflow-hidden');
+        } else {
+            document.body.classList.remove('overflow-hidden');
+        }
+    }
+});
+
 onMounted(() => {
-    if (typeof window !== 'undefined' && window.visualViewport) {
-        window.visualViewport.addEventListener('resize', updateMobileViewport);
-        window.visualViewport.addEventListener('scroll', updateMobileViewport);
-        window.addEventListener('scroll', updateMobileViewport);
-        updateMobileViewport();
+    if (typeof window !== 'undefined') {
+        window.addEventListener('focusin', handleFocusIn);
+        window.addEventListener('focusout', handleFocusOut);
     }
     try {
         const saved = localStorage.getItem('sidebar_collapsed');
@@ -1347,10 +1368,12 @@ const currentBreadcrumbTitle = computed(() => {
 });
 
 onUnmounted(() => {
-    if (typeof window !== 'undefined' && window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateMobileViewport);
-        window.visualViewport.removeEventListener('scroll', updateMobileViewport);
-        window.removeEventListener('scroll', updateMobileViewport);
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('focusin', handleFocusIn);
+        window.removeEventListener('focusout', handleFocusOut);
+    }
+    if (typeof document !== 'undefined') {
+        document.body.classList.remove('overflow-hidden');
     }
 });
 </script>

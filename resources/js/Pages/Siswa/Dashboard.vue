@@ -425,9 +425,9 @@
                     </h3>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                <div class="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
                     <div v-for="(stage, idx) in formattedPipelineStages" :key="stage.code"
-                        class="p-3.5 rounded-2xl text-center transition-all relative"
+                        class="p-3 sm:p-3.5 rounded-2xl text-center transition-all relative overflow-hidden"
                         :class="[
                             stage.isCompleted ? 'bg-emerald-50 border border-emerald-200' :
                             stage.isCurrent ? 'bg-amber-50 border-2 border-amber-400 shadow-md ring-2 ring-amber-400/30' :
@@ -435,15 +435,17 @@
                         ]"
                     >
                         <div class="mb-1.5 flex justify-center">
-                            <CheckCircle2 v-if="stage.isCompleted" class="w-5 h-5 text-emerald-600" />
-                            <Clock v-else-if="stage.isCurrent" class="w-5 h-5 text-amber-600 animate-spin" />
-                            <component v-else :is="stage.iconComponent" class="w-5 h-5 text-slate-400" />
+                            <CheckCircle2 v-if="stage.isCompleted" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+                            <Clock v-else-if="stage.isCurrent" class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 animate-spin" />
+                            <component v-else :is="stage.iconComponent" class="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
                         </div>
-                        <span class="text-xs font-black block" :class="stage.isCompleted ? 'text-emerald-950' : stage.isCurrent ? 'text-amber-950' : 'text-slate-700'">
+                        <span class="text-[10px] sm:text-xs font-black block leading-tight"
+                            :class="stage.isCompleted ? 'text-emerald-950' : stage.isCurrent ? 'text-amber-950' : 'text-slate-700'">
                             {{ stage.name }}
                         </span>
-                        <span class="text-[10px] font-bold block mt-0.5" :class="stage.isCompleted ? 'text-emerald-800' : stage.isCurrent ? 'text-amber-800' : 'text-slate-500'">
-                            {{ stage.statusLabel }}
+                        <span class="text-[9px] sm:text-[10px] font-bold block mt-0.5 leading-tight"
+                            :class="stage.isCompleted ? 'text-emerald-700' : stage.isCurrent ? 'text-amber-700' : 'text-slate-400'">
+                            {{ stage.isCompleted ? 'Tuntas ✅' : stage.isCurrent ? 'Berjalan ⚡' : 'Berikutnya' }}
                         </span>
                     </div>
                 </div>
