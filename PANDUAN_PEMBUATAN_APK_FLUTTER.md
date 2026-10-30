@@ -1,4 +1,4 @@
-﻿# 📱 PANDUAN LENGKAP PEMBUATAN APLIKASI ANDROID (APK) DENGAN FLUTTER
+# 📱 PANDUAN LENGKAP PEMBUATAN APLIKASI ANDROID (APK) DENGAN FLUTTER
 ## Arsitektur: Live Web-Shell (Realtime Cloud Sync) — LMS & CBT Masayume LPK
 
 Dokumen ini adalah panduan teknis langkah demi langkah untuk membangun dan meng-compile aplikasi Android (**APK**) menggunakan framework **Flutter**. 
@@ -17,7 +17,9 @@ Arsitektur ini dirancang khusus agar:
 6. [Implementasi Kode Utama (lib/main.dart)](#6-implementasi-kode-utama-libmaindart)
 7. [Pengaturan Ikon & Splash Screen](#7-pengaturan-ikon--splash-screen)
 8. [Build & Export File APK Release](#8-build--export-file-apk-release)
-9. [Tips Maintenance & Deployment Cloud](#9-tips-maintenance--deployment-cloud)
+9. [Standar Rilis Google Play Store (AAB & Keystore Signing)](#9-standar-rilis-google-play-store-aab--keystore-signing)
+10. [Checklist Kebijakan & Kepatuhan Google Play Console](#10-checklist-kebijakan--kepatuhan-google-play-console)
+11. [Tips Maintenance & Deployment Cloud](#11-tips-maintenance--deployment-cloud)
 
 ---
 
@@ -502,7 +504,7 @@ flutter pub run flutter_native_splash:create
 
 ## 8. Build & Export File APK Release
 
-Untuk menghasilkan file APK siap pakai yang bisa dibagikan ke siswa atau diinstall di HP:
+Untuk menghasilkan file APK siap pakai yang bisa dibagikan langsung ke siswa (instalasi manual / sideload di HP):
 
 ```bash
 # Bersihkan cache build lama
@@ -517,11 +519,119 @@ Hasil file APK yang sudah jadi akan berada di folder:
 ```
 build/app/outputs/flutter-apk/app-release.apk
 ```
-> **Catatan**: File `app-release.apk` inilah yang Anda bagikan ke siswa untuk di-install langsung di HP Android mereka.
+> **Catatan**: File `app-release.apk` ini cocok untuk instalasi langsung via WhatsApp / Google Drive tanpa melalui Play Store.
 
 ---
 
-## 9. Tips Maintenance & Deployment Cloud
+## 9. Standar Rilis Google Play Store (AAB & Keystore Signing)
+
+Google Play Store **tidak lagi menerima format .apk** untuk aplikasi baru. Anda wajib mengunggah format **Android App Bundle (.aab)** yang telah ditandatangani (*signed*) menggunakan kunci rilis resmi (*Release Keystore*).
+
+### A. Langkah 1: Buat Kunci Rilis Resmi (Upload Keystore)
+Jalankan perintah ini di terminal (menggunakan `keytool` bawaan Java SDK):
+
+```bash
+# Untuk Linux / macOS / WSL
+keytool -genkey -v -keystore upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+# Untuk Windows (Command Prompt / PowerShell)
+keytool -genkey -v -keystore android/app/upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+* Simpan file `upload-keystore.jks` ini ke dalam folder `android/app/`.
+* **PENTING**: Simpan password keystore dan jangan sampai hilang. Jika hilang, Anda tidak akan bisa mengupdate aplikasi di Google Play Store selamanya.
+
+### B. Langkah 2: Buat File `android/key.properties`
+Buat file baru di direktori `android/key.properties` (jangan di-commit ke Git publik):
+
+```properties
+storePassword=password_keystore_anda
+keyPassword=password_key_anda
+keyAlias=upload
+storeFile=upload-keystore.jks
+```
+
+### C. Langkah 3: Konfigurasi `android/app/build.gradle`
+Sesuaikan blok `android/app/build.gradle` agar membaca keystore dan memenuhi standar target SDK Google Play terbaru:
+
+```groovy
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+android {
+    namespace "id.masayume.lms"
+    compileSdkVersion 34 // Wajib minimal SDK 34 (Android 14) untuk Google Play
+
+    defaultConfig {
+        applicationId "id.masayume.lms"
+        minSdkVersion 21     // Android 5.0 Lollipop ke atas
+        targetSdkVersion 34  // Standar resmi Google Play
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+```
+
+### D. Langkah 4: Compile Android App Bundle (.AAB)
+Jalankan perintah build khusus Google Play:
+
+```bash
+flutter clean
+flutter pub get
+flutter build appbundle --release
+```
+
+Hasil file `.aab` resmi untuk Google Play Store berada di folder:
+```
+build/app/outputs/bundle/release/app-release.aab
+```
+File `app-release.aab` inilah yang di-upload ke menu **Production / Internal Testing** di Google Play Console.
+
+---
+
+## 10. Checklist Kebijakan & Kepatuhan Google Play Console
+
+Agar aplikasi LPK Masayume **lolos review 100% dan tidak ditolak oleh tim verifikasi Google**, pastikan checklist berikut terpenuhi:
+
+1. **Kebijakan Fungsionalitas Minimum (Minimum Functionality)**:
+   - Google melarang WebView yang hanya membungkus website kosong tanpa fitur native.
+   - Proyek ini **SUDAH LOLOS** karena dilengkapi: Native Splash Screen Masayume, Layar Deteksi Offline (No Internet Screen), Android Hardware Back Navigator, dan Native Permission Handler.
+2. **URL Kebijakan Privasi (Privacy Policy)**:
+   - Wajib mencantumkan link Privacy Policy publik (misal: `https://lms.masayume.co.id/privacy-policy`).
+   - Dokumen harus menjelaskan data apa yang disimpan (Nama, Email, Hasil Ujian CBT, Foto Dokumen).
+3. **Fitur Hapus Akun (Account Deletion Policy)**:
+   - Google Play mewajibkan adanya opsi bagi pengguna untuk menghapus akun dan data mereka langsung dari dalam aplikasi.
+   - Fitur ini sudah tersedia di portal sistem pada menu `Profile Settings -> Delete Account`.
+4. **Target Rating Usia (Content Rating Questionnaire)**:
+   - Pilih kategori **Education (Pendidikan)**.
+   - Jawab kuesioner bahwa aplikasi tidak mengandung konten kekerasan, judi, atau materi dewasa.
+5. **Persyaratan Uji Coba 20 Tester (Akun Developer Perorangan Baru)**:
+   - Jika akun Google Play Console Anda berjenis *Personal (Perorangan)* yang dibuat setelah November 2023, Google mewajibkan minimal 20 tester menginstall aplikasi dan mengujinya selama 14 hari berturut-turut pada jalur *Closed Testing* sebelum diizinkan rilis ke publik (*Production*).
+   - *(Jika menggunakan akun Google Play atas nama Badan Usaha / PT / Yayasan LPK resmi, syarat 20 tester ini tidak berlaku).*
+
+---
+
+## 11. Tips Maintenance & Deployment Cloud
 
 1. **Aturan Caching Nginx/Cloudflare di Server**:
    - File assets build JS/CSS (`/build/assets/*`) boleh di-cache agresif karena menggunakan hash unik Vite.

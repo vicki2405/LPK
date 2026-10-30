@@ -189,3 +189,59 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// ================= ZERO-SYMLINK STORAGE STREAMER FALLBACK =================
+// Serves uploaded avatars, LMS images/audios, and CBT listening assets even if symlinks are disabled in shared hosting.
+Route::get('/storage/{path}', function (string $path) {
+    // Sanitize path to prevent directory traversal attacks
+    $path = str_replace('\\', '/', $path);
+    $segments = array_filter(explode('/', $path), function ($segment) {
+        return $segment !== '' && $segment !== '.' && $segment !== '..';
+    });
+    $path = implode('/', $segments);
+
+    if (empty($path)) {
+        abort(404, 'File not found');
+    }
+
+    $candidates = [
+        public_path('storage/' . $path),
+        storage_path('app/public/' . $path),
+        base_path('../public_html/storage/' . $path),
+        base_path('public_html/storage/' . $path),
+    ];
+
+    foreach ($candidates as $candidate) {
+        if (file_exists($candidate) && is_file($candidate)) {
+            $mimeType = @mime_content_type($candidate) ?: 'application/octet-stream';
+
+            // Correct MIME type for common audio/image formats
+            $extension = strtolower(pathinfo($candidate, PATHINFO_EXTENSION));
+            $extensionMimes = [
+                'mp3' => 'audio/mpeg',
+                'wav' => 'audio/wav',
+                'ogg' => 'audio/ogg',
+                'm4a' => 'audio/mp4',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp',
+                'svg' => 'image/svg+xml',
+                'pdf' => 'application/pdf',
+            ];
+
+            if (isset($extensionMimes[$extension])) {
+                $mimeType = $extensionMimes[$extension];
+            }
+
+            return response()->file($candidate, [
+                'Content-Type' => $mimeType,
+                'Cache-Control' => 'public, max-age=31536000, immutable',
+                'Access-Control-Allow-Origin' => '*',
+            ]);
+        }
+    }
+
+    abort(404, 'File not found');
+})->where('path', '.*')->name('storage.stream');

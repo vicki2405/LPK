@@ -55,11 +55,20 @@ class User extends Authenticatable
             return $this->avatar;
         }
 
-        if (!Storage::disk('public')->exists($this->avatar)) {
+        $exists = Storage::disk('public')->exists($this->avatar)
+            || file_exists(public_path('storage/' . $this->avatar))
+            || file_exists(storage_path('app/public/' . $this->avatar));
+
+        if (!$exists) {
             return null;
         }
 
-        $timestamp = Storage::disk('public')->lastModified($this->avatar) ?: time();
+        $timestamp = time();
+        try {
+            $timestamp = Storage::disk('public')->lastModified($this->avatar) ?: time();
+        } catch (\Throwable) {
+            // Fallback timestamp if disk driver throws
+        }
 
         return asset('storage/' . $this->avatar) . '?v=' . $timestamp;
     }
