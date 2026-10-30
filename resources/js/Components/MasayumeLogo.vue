@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center select-none text-left">
+    <div class="flex items-center select-none text-left shrink-0">
         <!-- Logo Image (Tightly-Cropped Transparent Phoenix) -->
         <div class="relative flex items-center justify-center shrink-0">
             <img 
@@ -10,7 +10,7 @@
         </div>
 
         <!-- Logotype Typography (Bolder & Clean) -->
-        <div v-if="!iconOnly" class="flex flex-col justify-center text-left ml-3 shrink-0">
+        <div v-if="!iconOnly" class="flex flex-col justify-center text-left ml-3 shrink-0 whitespace-nowrap">
             <span class="font-black tracking-tight text-lg sm:text-xl md:text-2xl leading-none text-slate-950 font-sans">
                 MASAYUME
             </span>

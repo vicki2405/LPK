@@ -5,60 +5,16 @@
 
         <!-- ================= FIXED / STICKY HEADER WRAPPER ================= -->
         <div class="fixed top-0 inset-x-0 z-50 transition-all duration-300">
-            <!-- Topbar -->
-            <div class="bg-slate-950 text-slate-300 text-xs py-1.5 px-4 sm:px-8 border-b border-slate-800/80">
-                <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5">
-                    <div class="flex items-center gap-3 text-[11px] sm:text-xs">
-                        <span class="flex items-center gap-1.5 font-bold text-slate-200">
-                            <span class="relative flex h-2 w-2">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            {{ isJapanese ? '厚生労働省・公認送出機関' : (settings.lpk_legal_info || '🏛️ Izin Resmi Kemenaker RI & Terakreditasi SO') }}
-                        </span>
-                        <span class="hidden md:inline text-slate-700">|</span>
-                        <span class="hidden md:inline text-slate-400">
-                            {{ isJapanese ? '特定技能・技能実習生育成' : (settings.lpk_topbar_subtitle || 'Program Tokutei Ginou (SSW) & Magang Kerja Jepang') }}
-                        </span>
-                    </div>
-
-                    <div class="flex items-center gap-4 text-xs font-bold">
-                        <a :href="`https://wa.me/${cleanWaNumber(settings.contact_whatsapp)}`" target="_blank" class="hover:text-amber-400 transition-colors flex items-center gap-1.5 text-slate-300">
-                            <span>💬 {{ isJapanese ? '無料相談・受付:' : 'Konsultasi:' }} <strong class="text-white font-mono">{{ settings.contact_phone || '0812-3456-7890' }}</strong></span>
-                        </a>
-                        <!-- Language Switcher -->
-                        <div class="flex items-center bg-slate-900 rounded-full p-0.5 border border-slate-800">
-                            <button
-                                type="button"
-                                @click="setLang('id')"
-                                class="px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer"
-                                :class="isIndonesian ? 'bg-japan-red text-white shadow-xs' : 'text-slate-400 hover:text-white'"
-                            >
-                                🇮🇩 ID
-                            </button>
-                            <button
-                                type="button"
-                                @click="setLang('ja')"
-                                class="px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer font-jp"
-                                :class="isJapanese ? 'bg-japan-red text-white shadow-xs' : 'text-slate-400 hover:text-white'"
-                            >
-                                🇯🇵 日本語
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Main Navigation Navbar -->
-            <nav class="bg-white/90 backdrop-blur-xl border-b border-slate-200/80 shadow-xs">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
-                    <!-- Brand Logo -->
-                    <Link :href="route('home')" class="flex items-center gap-3 group">
+            <!-- Main Navigation Navbar (Zero-Clutter Japan Minimalist) -->
+            <nav class="bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-xs">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between gap-4">
+                    <!-- Brand Logo (Protected from shrinking or collision) -->
+                    <Link :href="route('home')" class="flex items-center gap-3 group shrink-0">
                         <MasayumeLogo class="transition-transform duration-300 group-hover:scale-105" />
                     </Link>
 
-                    <!-- Desktop Nav Links with Hover Underline Animation -->
-                    <div class="hidden lg:flex items-center gap-6 text-xs font-black uppercase tracking-wider text-slate-700">
+                    <!-- Desktop Nav Links with Hover Underline Animation (Active at XL breakpoint for collision-free layout) -->
+                    <div class="hidden xl:flex items-center gap-4 2xl:gap-6 text-xs font-black uppercase tracking-wider text-slate-700 shrink-0">
                         <a href="#tentang" class="relative py-1 hover:text-japan-red transition-colors nav-link">{{ isJapanese ? '当機関について' : 'Tentang LPK' }}</a>
                         <a href="#program" class="relative py-1 hover:text-japan-red transition-colors nav-link">{{ isJapanese ? 'プログラム' : 'Program' }}</a>
                         <a href="#sektor" class="relative py-1 hover:text-japan-red transition-colors nav-link">{{ isJapanese ? '職種一覧' : 'Sektor Kerja' }}</a>
@@ -69,20 +25,42 @@
                         <a href="#kontak" class="relative py-1 hover:text-japan-red transition-colors nav-link">{{ isJapanese ? 'お問い合わせ' : 'Kontak' }}</a>
                     </div>
 
-                    <!-- CTA Login Portal Button & Mobile Hamburger -->
-                    <div class="flex items-center gap-3">
+                    <!-- CTA Actions (Language Switcher, Portal Button, Mobile/Tablet Hamburger) -->
+                    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <!-- Language Switcher Pill (Compact & Elegant) -->
+                        <div class="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200 shrink-0">
+                            <button
+                                type="button"
+                                @click="setLang('id')"
+                                class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-black transition-all cursor-pointer"
+                                :class="isIndonesian ? 'bg-japan-red text-white shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                            >
+                                ID
+                            </button>
+                            <button
+                                type="button"
+                                @click="setLang('ja')"
+                                class="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-black transition-all cursor-pointer font-jp"
+                                :class="isJapanese ? 'bg-japan-red text-white shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                            >
+                                JP
+                            </button>
+                        </div>
+
+                        <!-- CTA Login Portal Button -->
                         <Link
                             :href="route('login')"
-                            class="hidden sm:inline-flex px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 via-japan-red to-rose-600 hover:from-red-700 hover:to-rose-700 text-white text-xs font-black shadow-md shadow-japan-red/30 hover:shadow-lg hover:shadow-japan-red/40 transition-all duration-300 transform hover:-translate-y-0.5 items-center gap-2 group"
+                            class="hidden sm:inline-flex px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 via-japan-red to-rose-600 hover:from-red-700 hover:to-rose-700 text-white text-xs font-black shadow-md shadow-japan-red/30 hover:shadow-lg hover:shadow-japan-red/40 transition-all duration-300 transform hover:-translate-y-0.5 items-center gap-2 group shrink-0"
                         >
                             <span class="group-hover:rotate-12 transition-transform duration-300">🔑</span>
                             <span>{{ isJapanese ? 'ポータルログイン' : 'Masuk Portal' }}</span>
                         </Link>
 
+                        <!-- Mobile & Tablet Hamburger Toggle -->
                         <button
                             type="button"
                             @click="showMobileMenu = !showMobileMenu"
-                            class="lg:hidden p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors cursor-pointer"
+                            class="xl:hidden p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 transition-colors cursor-pointer shrink-0"
                             aria-label="Toggle menu"
                         >
                             <Menu v-if="!showMobileMenu" class="w-5 h-5" />
@@ -91,22 +69,31 @@
                     </div>
                 </div>
 
-                <!-- Mobile Navigation Dropdown -->
-                <div v-if="showMobileMenu" class="lg:hidden bg-white border-b border-slate-200 px-6 py-4 space-y-3 animate-fade-in text-xs font-black uppercase tracking-wider text-slate-700 shadow-xl">
-                    <a href="#tentang" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? '当機関について' : 'Tentang LPK' }}</a>
-                    <a href="#program" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? 'プログラム' : 'Program Pelatihan' }}</a>
-                    <a href="#sektor" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? '職種一覧' : 'Sektor Kerja' }}</a>
-                    <a href="#alur" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? '送出フロー' : 'Alur 7 Tahap' }}</a>
-                    <a href="#testimoni" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? '実習生の声' : 'Testimoni' }}</a>
-                    <a href="#galeri" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? '活動写真' : 'Galeri Kegiatan' }}</a>
-                    <a href="#teknologi" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? 'LMS・CBTシステム' : 'Sistem Digital' }}</a>
-                    <a href="#kontak" @click="showMobileMenu = false" class="block py-2 hover:text-japan-red transition-colors">{{ isJapanese ? 'お問い合わせ' : 'Kontak' }}</a>
-                    <div class="pt-2 border-t border-slate-100">
+                <!-- Mobile & Tablet Navigation Dropdown -->
+                <div v-if="showMobileMenu" class="xl:hidden bg-white/98 backdrop-blur-xl border-b border-slate-200 px-6 py-5 space-y-2 animate-fade-in text-xs font-black uppercase tracking-wider text-slate-700 shadow-xl max-h-[calc(100vh-5rem)] overflow-y-auto">
+                    <a href="#tentang" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? '当機関について' : 'Tentang LPK' }}</a>
+                    <a href="#program" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? 'プログラム' : 'Program Pelatihan' }}</a>
+                    <a href="#sektor" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? '職種一覧' : 'Sektor Kerja' }}</a>
+                    <a href="#alur" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? '送出フロー' : 'Alur 7 Tahap' }}</a>
+                    <a href="#testimoni" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? '実習生の声' : 'Testimoni' }}</a>
+                    <a href="#galeri" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? '活動写真' : 'Galeri Kegiatan' }}</a>
+                    <a href="#teknologi" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? 'LMS・CBTシステム' : 'Sistem Digital' }}</a>
+                    <a href="#kontak" @click="showMobileMenu = false" class="block py-2.5 px-3 rounded-xl hover:bg-slate-50 hover:text-japan-red transition-colors">{{ isJapanese ? 'お問い合わせ' : 'Kontak' }}</a>
+                    <div class="pt-3 border-t border-slate-100 space-y-2">
+                        <a
+                            :href="`https://wa.me/${cleanWaNumber(settings.contact_whatsapp)}`"
+                            target="_blank"
+                            class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black text-center flex items-center justify-center gap-2 shadow-sm transition-colors"
+                        >
+                            <span>💬</span>
+                            <span>{{ isJapanese ? 'WhatsApp 無料相談' : 'Konsultasi WhatsApp' }}</span>
+                        </a>
                         <Link
                             :href="route('login')"
-                            class="w-full py-3 rounded-xl bg-japan-red text-white text-xs font-black text-center block shadow-md"
+                            class="w-full py-3 px-4 rounded-xl bg-japan-red hover:bg-red-700 text-white text-xs font-black text-center flex items-center justify-center gap-2 shadow-md transition-colors"
                         >
-                            {{ isJapanese ? '🔑 ポータルログイン (LMS/CBT)' : '🔑 Masuk Portal (LMS & CBT)' }}
+                            <span>🔑</span>
+                            <span>{{ isJapanese ? 'ポータルログイン (LMS/CBT)' : 'Masuk Portal (LMS & CBT)' }}</span>
                         </Link>
                     </div>
                 </div>
@@ -114,7 +101,7 @@
         </div>
 
         <!-- ================= ULTRA-MODERN HERO SECTION ================= -->
-        <header class="relative bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-white pt-36 pb-16 sm:pt-44 sm:pb-24 overflow-hidden">
+        <header class="relative bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 text-white pt-24 pb-16 sm:pt-28 sm:pb-24 overflow-hidden">
             
             <!-- Ambient Background Mesh Glow -->
             <div class="absolute -top-24 -right-24 w-96 sm:w-[550px] h-96 sm:h-[550px] bg-red-600/20 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
