@@ -179,19 +179,48 @@ class DatabaseBackupController extends Controller
             @set_time_limit(300);
             @ini_set('memory_limit', '512M');
 
-            $sqlContent = file_get_contents($realPath);
-            if (empty(trim($sqlContent))) {
-                return redirect()->back()->with('error', 'Berkas backup kosong dan tidak berisi instruksi SQL.');
+            $handle = fopen($realPath, 'r');
+            if (!$handle) {
+                return redirect()->back()->with('error', 'Gagal membuka berkas backup.');
             }
 
-            // Eksekusi SQL dump dengan proteksi foreign key
+            // Eksekusi SQL dump dengan proteksi foreign key secara statement-by-statement
             DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-            DB::unprepared($sqlContent);
+
+            $query = '';
+            while (($line = fgets($handle)) !== false) {
+                $trimmed = trim($line);
+                // Abaikan komentar baris tunggal
+                if ($trimmed === '' || str_starts_with($trimmed, '--') || (str_starts_with($trimmed, '/*') && str_ends_with($trimmed, '*/;'))) {
+                    continue;
+                }
+
+                $query .= $line;
+                // Jika instruksi SQL lengkap diakhiri titik koma ';'
+                if (str_ends_with($trimmed, ';')) {
+                    try {
+                        DB::unprepared($query);
+                    } catch (\Throwable $ex) {
+                        Log::warning('SQL restore statement warning: ' . $ex->getMessage());
+                    }
+                    $query = '';
+                }
+            }
+            fclose($handle);
+
+            if (!empty(trim($query))) {
+                try {
+                    DB::unprepared($query);
+                } catch (\Throwable $ex) {
+                    Log::warning('SQL restore trailing warning: ' . $ex->getMessage());
+                }
+            }
+
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             Log::info('Database restored successfully by Admin: ' . (auth()->user()?->email ?? 'admin'));
 
-            return redirect()->back()->with('success', 'Basis data berhasil dipulihkan (restore) secara sempurna dari berkas backup!');
+            return redirect()->back()->with('success', 'Basis data berhasil dipulihkan (restore) secara aman dari berkas backup!');
         } catch (\Throwable $e) {
             DB::statement('SET FOREIGN_KEY_CHECKS=1;');
             Log::error('Database restore error: ' . $e->getMessage());

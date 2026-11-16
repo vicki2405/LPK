@@ -114,7 +114,11 @@ class UserController extends Controller
      */
     public function resetPassword(Request $request, User $user): RedirectResponse
     {
-        $newPassword = $request->input('password', 'password');
+        $validated = $request->validate([
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $newPassword = !empty($validated['password']) ? $validated['password'] : 'password';
         $user->update(['password' => Hash::make($newPassword)]);
 
         return redirect()->back()->with('success', "Password akun {$user->name} berhasil direset!");

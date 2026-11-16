@@ -24,18 +24,63 @@ class CbtController extends Controller
     public function start(Exam $exam, Request $request): RedirectResponse
     {
         $user = $request->user();
+        $isPrivileged = $user->hasAnyRole(['admin', 'sensei']);
 
-        // Cari sesi yang masih berjalan (in_progress)
+        // 1. Keamanan: Validasi status publikasi ujian
+        if (!$exam->is_published && !$isPrivileged) {
+            return redirect()->route('siswa.exams.index')->with('error', 'Paket ujian belum diterbitkan oleh Sensei.');
+        }
+
+        // 2. Keamanan: Validasi jadwal mulai & berakhir ujian
+        $now = now();
+        if ($exam->start_time && $now->lessThan($exam->start_time) && !$isPrivileged) {
+            return redirect()->route('siswa.exams.index')->with('error', 'Ujian belum dibuka. Jadwal mulai: ' . $exam->start_time->format('d M Y, H:i') . ' WIB.');
+        }
+
+        if ($exam->end_time && $now->greaterThan($exam->end_time) && !$isPrivileged) {
+            return redirect()->route('siswa.exams.index')->with('error', 'Jadwal pengerjaan ujian ini telah berakhir pada ' . $exam->end_time->format('d M Y, H:i') . ' WIB.');
+        }
+
+        // 3. Keamanan: Validasi penugasan Angkatan (Batch)
+        if ($exam->batch_id && !$isPrivileged) {
+            $userBatchIds = $user->batches()->pluck('batches.id')->toArray();
+            if (!in_array($exam->batch_id, $userBatchIds)) {
+                return redirect()->route('siswa.exams.index')->with('error', 'Ujian ini hanya diperuntukkan bagi peserta dari angkatan/kelas khusus.');
+            }
+        }
+
+        // 4. Cari sesi yang masih berjalan (in_progress)
         $session = ExamSession::where('user_id', $user->id)
             ->where('exam_id', $exam->id)
             ->where('status', 'in_progress')
             ->first();
 
         if (!$session) {
+            $previousSessions = ExamSession::where('user_id', $user->id)
+                ->where('exam_id', $exam->id)
+                ->get();
+
+            // Cegah retake jika sebelumnya didiskualifikasi karena kecurangan
+            $disqualifiedSession = $previousSessions->firstWhere('is_disqualified', true);
+            if ($disqualifiedSession && !$isPrivileged) {
+                return redirect()->route('siswa.cbt.result', $disqualifiedSession->id)
+                    ->with('error', 'Anda telah didiskualifikasi dari ujian ini karena terdeteksi pelanggaran.');
+            }
+
+            // Batasi jumlah percobaan pengerjaan (max_attempts)
+            $completedCount = $previousSessions->whereIn('status', ['submitted', 'completed'])->count();
+            $maxAttempts = $exam->max_attempts ?: 1;
+            if ($completedCount >= $maxAttempts && !$isPrivileged) {
+                $lastSubmitted = $previousSessions->whereIn('status', ['submitted', 'completed'])->sortByDesc('id')->first();
+                return redirect()->route('siswa.cbt.result', $lastSubmitted->id)
+                    ->with('info', "Anda telah mencapai batas maksimal pengerjaan untuk ujian ini ({$maxAttempts}x).");
+            }
+
             $durationMinutes = $exam->duration_minutes > 0 ? $exam->duration_minutes : 60;
             $session = ExamSession::create([
                 'user_id' => $user->id,
                 'exam_id' => $exam->id,
+                'attempt_number' => $completedCount + 1,
                 'started_at' => now(),
                 'expires_at' => now()->addMinutes($durationMinutes),
                 'status' => 'in_progress',
@@ -165,8 +210,8 @@ class CbtController extends Controller
     public function saveAnswer(ExamSession $session, Request $request): JsonResponse
     {
         $user = Auth::user();
-        if ($session->user_id !== $user->id || $session->status !== 'in_progress') {
-            return response()->json(['error' => 'Sesi ujian tidak valid atau telah berakhir'], 403);
+        if ($session->user_id !== $user->id || $session->status !== 'in_progress' || $session->is_disqualified) {
+            return response()->json(['error' => 'Sesi ujian tidak valid, telah berakhir, atau Anda telah didiskualifikasi.'], 403);
         }
 
         // Keamanan: Validasi batas waktu pengerjaan ujian (toleransi 2 menit untuk latensi jaringan)
@@ -209,33 +254,40 @@ class CbtController extends Controller
             $latestOptionId = $latest['question_option_id'] ?? null;
             $latestQuestionId = $latest['question_id'] ?? null;
 
-            DB::table('exam_answers')->upsert(
-                $records,
-                ['exam_session_id', 'question_id'],
-                ['question_option_id', 'is_doubtful', 'answered_at', 'updated_at']
-            );
+            // Transaksi dengan 3x auto-retry untuk menangani InnoDB deadlock pada konkurensi tinggi
+            DB::transaction(function () use ($records) {
+                DB::table('exam_answers')->upsert(
+                    $records,
+                    ['exam_session_id', 'question_id'],
+                    ['question_option_id', 'is_doubtful', 'answered_at', 'updated_at']
+                );
+            }, 3);
         }
 
-        // Hanya sertakan feedback koreksi langsung jika ujian bertipe game atau client request mode game
+        // Anti-Cheat Ketat: Kunci jawaban ('is_correct' & 'correct_option_id') HANYA boleh dikirim jika ujian murni bertipe game arcade!
+        // Pada simulasi resmi N4 / ujian formal, kunci jawaban DILARANG KERAS dibocorkan ke client dalam respon apa pun.
         $isGameMode = false;
         $isCorrect = null;
-        if ($latestOptionId) {
-            $allowSwitch = (bool) ($session->exam->allow_student_mode_switch ?? true);
-            $displayMode = Cache::remember("exam_mode_{$session->exam_id}", 3600, function () use ($session) {
-                return DB::table('exams')->where('id', $session->exam_id)->value('display_mode') ?? 'formal';
-            });
-            $isGameMode = ($displayMode === 'game') || ($allowSwitch && $request->input('mode') === 'game');
+        $correctOptionId = null;
+        $liveLeaderboard = null;
 
-            if ($isGameMode) {
-                $isCorrect = (bool) DB::table('question_options')
-                    ->where('id', $latestOptionId)
-                    ->value('is_correct');
-                $correctOptionId = DB::table('question_options')
-                    ->where('question_id', $latestQuestionId)
-                    ->where('is_correct', 1)
-                    ->value('id');
+        $exam = $session->exam;
+        $isOfficialExam = in_array($exam->exam_type ?? '', ['jlpt_simulation', 'jft_simulation']) || (($exam->display_mode ?? 'formal') !== 'game');
 
-                $liveLeaderboard = ExamSession::where('exam_id', $session->exam_id)
+        if (!$isOfficialExam && $latestOptionId) {
+            $isGameMode = true;
+            $isCorrect = (bool) DB::table('question_options')
+                ->where('id', $latestOptionId)
+                ->value('is_correct');
+            $correctOptionId = DB::table('question_options')
+                ->where('question_id', $latestQuestionId)
+                ->where('is_correct', 1)
+                ->value('id');
+
+            // Optimasi performa: Cache leaderboard selama 5 detik agar tidak memicu query filesort di setiap jawaban siswa
+            $cacheKeyLb = "live_leaderboard_{$session->exam_id}";
+            $rawLeaderboard = Cache::remember($cacheKeyLb, 5, function () use ($session) {
+                return ExamSession::where('exam_id', $session->exam_id)
                     ->whereNotNull('total_score')
                     ->with('user:id,name')
                     ->orderByDesc('total_score')
@@ -247,18 +299,22 @@ class CbtController extends Controller
                         'user_id' => $s->user_id,
                         'name' => $s->user?->name ?? 'Peserta CBT',
                         'score' => (int) $s->total_score,
-                        'isCurrentUser' => $s->user_id === $user->id,
                     ])->values()->all();
-            }
+            });
+
+            $liveLeaderboard = array_map(function ($item) use ($user) {
+                $item['isCurrentUser'] = ($item['user_id'] === $user->id);
+                return $item;
+            }, $rawLeaderboard);
         }
 
         return response()->json([
             'success' => true, 
             'synced_count' => count($records),
             'is_correct' => $isCorrect,
-            'correct_option_id' => $correctOptionId ?? null,
+            'correct_option_id' => $correctOptionId,
             'question_id' => $latestQuestionId,
-            'live_leaderboard' => $liveLeaderboard ?? null,
+            'live_leaderboard' => $liveLeaderboard,
         ]);
     }
 
@@ -441,9 +497,15 @@ class CbtController extends Controller
         $unansweredCount = max(0, $totalQuestionsCount - $answeredCount);
         $wrongCount = max(0, $answeredCount - $correctCount);
 
-        // Skalakan skor jika bobot pertanyaan kecil ke skala standar 180
+        // Skalakan skor jika bobot pertanyaan kecil ke skala standar 180 (Standar Resmi JLPT N4)
         $maxRawScore = $questions->sum('score_points') ?: 1;
-        $scaledTotalScore = round(($rawScore / $maxRawScore) * ($session->exam->max_score ?: 180), 1);
+        $maxExamScore = $session->exam->max_score ?: 180;
+        $scaleFactor = $maxExamScore / $maxRawScore;
+
+        $scaledTotalScore = round(($rawScore / $maxRawScore) * $maxExamScore, 1);
+        $scaledMojiGoi = round($mojiGoiScore * $scaleFactor, 1);
+        $scaledBunpouDokkai = round($bunpouDokkaiScore * $scaleFactor, 1);
+        $scaledChoukai = round($choukaiScore * $scaleFactor, 1);
 
         $passingScore = $session->exam->passing_score ?: 90;
         $isPassed = $scaledTotalScore >= $passingScore && !$session->is_disqualified;
@@ -452,9 +514,9 @@ class CbtController extends Controller
             'status' => 'submitted',
             'submitted_at' => now(),
             'total_score' => $scaledTotalScore,
-            'moji_goi_score' => $mojiGoiScore,
-            'bunpou_dokkai_score' => $bunpouDokkaiScore,
-            'choukai_score' => $choukaiScore,
+            'moji_goi_score' => $scaledMojiGoi,
+            'bunpou_dokkai_score' => $scaledBunpouDokkai,
+            'choukai_score' => $scaledChoukai,
             'correct_answers_count' => $correctCount,
             'wrong_answers_count' => $wrongCount,
             'unanswered_count' => $unansweredCount,
@@ -470,8 +532,8 @@ class CbtController extends Controller
     public function result(ExamSession $session): Response
     {
         $user = Auth::user();
-        if ($session->user_id !== $user->id) {
-            abort(403);
+        if ($session->user_id !== $user->id && !$user->hasAnyRole(['admin', 'sensei'])) {
+            abort(403, 'Akses hasil ujian tidak diizinkan.');
         }
 
         $session->load('exam');

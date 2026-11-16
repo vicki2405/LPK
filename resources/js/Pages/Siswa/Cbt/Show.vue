@@ -1028,19 +1028,41 @@ const currentStreak = computed(() => {
     return Math.min(10, Math.max(1, Math.floor(answeredCount.value / 3) + 1));
 });
 
+const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+// Kalkulasi sisa detik presisi tinggi berbasis perbandingan wall-clock server timestamp
+const calculateRemainingSeconds = () => {
+    if (!props.session?.expires_at) return Math.max(0, Math.floor(Number(props.session?.remaining_seconds) || 3600));
+    const expiresMs = new Date(props.session.expires_at).getTime();
+    const nowMs = Date.now();
+    return Math.max(0, Math.floor((expiresMs - nowMs) / 1000));
+};
+
 const currentQuestionIndex = ref(0);
 const isFullscreen = ref(false);
-const timerSeconds = ref(Math.max(0, Math.floor(Number(props.session?.remaining_seconds) || 3600)));
+const timerSeconds = ref(calculateRemainingSeconds());
+const isSubmitting = ref(false);
 let timerInterval = null;
 let periodicSyncInterval = null;
 const showMobilePalette = ref(false);
 
-// Choukai Audio Engine Anti-Cheat State
+// Choukai Audio Engine Anti-Cheat State & Local Storage Persistence (Cegah Reset Limit via F5)
+const audioStorageKey = `cbt_audio_history_session_${props.session.id}`;
+const initAudioHistory = () => {
+    if (props.session?.is_preview) return {};
+    try {
+        const saved = localStorage.getItem(audioStorageKey);
+        return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+        return {};
+    }
+};
+
 const audioPlayerRef = ref(null);
 const isAudioPlaying = ref(false);
 const audioCurrentTime = ref(0);
 const audioDuration = ref(0);
-const audioPlayHistory = ref({});
+const audioPlayHistory = ref(initAudioHistory());
 
 const currentQuestionAudioPlays = computed(() => {
     return audioPlayHistory.value[currentQuestion.value?.id] || 0;
@@ -1095,6 +1117,11 @@ const onAudioEnded = () => {
     const qId = currentQuestion.value?.id;
     if (qId) {
         audioPlayHistory.value[qId] = (audioPlayHistory.value[qId] || 0) + 1;
+        if (!props.session?.is_preview) {
+            try {
+                localStorage.setItem(audioStorageKey, JSON.stringify(audioPlayHistory.value));
+            } catch (e) {}
+        }
     }
 };
 
@@ -1414,19 +1441,35 @@ const reportViolation = (type, message) => {
     }).catch(() => {});
 };
 
+const updateTimerTick = () => {
+    const remaining = calculateRemainingSeconds();
+    timerSeconds.value = remaining;
+    if (remaining <= 0) {
+        if (timerInterval) clearInterval(timerInterval);
+        executeSubmit();
+    }
+};
+
 const handleVisibilityChange = () => {
+    updateTimerTick();
     if (document.hidden) {
         reportViolation('tab_switch', 'Terdeteksi berpindah tab browser atau meminimalkan browser.');
     }
 };
 
 const handleWindowBlur = () => {
-    reportViolation('window_blur', 'Layar ujian kehilangan fokus (membuka aplikasi lain/AI).');
+    // Pada HP/layar sentuh, blur sering terpicu oleh keyboard sentuh atau notifikasi popup
+    // Tab-switch murni ditangani oleh handleVisibilityChange
+    if (isMobileDevice) return;
+    if (document.hidden) {
+        reportViolation('window_blur', 'Layar ujian kehilangan fokus (membuka aplikasi lain/AI).');
+    }
 };
 
 const handleFullscreenChange = () => {
     isFullscreen.value = Boolean(document.fullscreenElement);
-    if (!document.fullscreenElement && !showViolationModal.value && !isDisqualified.value) {
+    // Abaikan perubahan fullscreen di HP karena address bar bergerak saat scrolling
+    if (!isMobileDevice && !document.fullscreenElement && !showViolationModal.value && !isDisqualified.value) {
         reportViolation('tab_switch', 'Terdeteksi keluar dari mode Fullscreen ujian.');
     }
 };
@@ -1436,13 +1479,16 @@ const resumeAfterViolation = () => {
     requestFullscreen();
 };
 
-// Eksekusi pengiriman lembar ujian dengan jaminan data terkirim 100%
+// Eksekusi pengiriman lembar ujian dengan jaminan data terkirim 100% dan mekanisme retry
 const executeSubmit = () => {
     if (props.session?.is_preview) {
         alert("Mode Preview Ujian Selesai!\n\nSeluruh alur dan komponen ujian berhasil disimulasikan. Anda dapat menutup tab ini.");
         window.close();
         return;
     }
+
+    if (isSubmitting.value) return;
+    isSubmitting.value = true;
 
     const pendingAnswers = Object.entries(userAnswers.value).map(([qId, ans]) => ({
         question_id: Number(qId),
@@ -1456,7 +1502,21 @@ const executeSubmit = () => {
         onSuccess: () => {
             try {
                 localStorage.removeItem(storageKey);
+                localStorage.removeItem(audioStorageKey);
             } catch (e) {}
+        },
+        onError: () => {
+            isSubmitting.value = false;
+            confirmDialog(
+                'Gagal Mengirim Lembar Ujian',
+                'Terjadi gangguan jaringan internet ke server. Jawaban Anda tetap tersimpan dengan aman di browser. Silakan klik tombol di bawah untuk mencoba kirim ulang.',
+                'warning',
+                'Kirim Ulang Sekarang'
+            ).then((res) => {
+                if (res.isConfirmed) {
+                    executeSubmit();
+                }
+            });
         }
     });
 };
@@ -1497,14 +1557,9 @@ onMounted(() => {
 
     requestFullscreen();
 
-    timerInterval = setInterval(() => {
-        if (timerSeconds.value > 0) {
-            timerSeconds.value = Math.max(0, Math.floor(timerSeconds.value - 1));
-        } else {
-            clearInterval(timerInterval);
-            executeSubmit();
-        }
-    }, 1000);
+    // Timer sinkron berbasis wall-clock timestamp server
+    updateTimerTick();
+    timerInterval = setInterval(updateTimerTick, 1000);
 
     // Auto-retry flush setiap 15 detik jika masih ada antrean yang belum tersinkron
     periodicSyncInterval = setInterval(() => {
@@ -1515,6 +1570,7 @@ onMounted(() => {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('focus', updateTimerTick);
     window.addEventListener('blur', handleWindowBlur);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -1526,6 +1582,7 @@ onUnmounted(() => {
     if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    window.removeEventListener('focus', updateTimerTick);
     window.removeEventListener('blur', handleWindowBlur);
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);

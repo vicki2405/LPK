@@ -20,6 +20,7 @@ class RaporController extends Controller
             'batches:id,name,code',
             'examSessions' => fn($q) => $q->whereIn('status', ['submitted', 'completed'])
                 ->latest()
+                ->take(10)
                 ->with([
                     'exam:id,title,level,max_score,passing_score',
                     'answers' => fn($qa) => $qa->select(

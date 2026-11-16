@@ -43,7 +43,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the public URL for the user's avatar.
+     * Get the public URL for the user's avatar (Ultra-fast 0ms accessor without disk bottleneck).
      */
     public function getAvatarUrlAttribute(): ?string
     {
@@ -55,22 +55,7 @@ class User extends Authenticatable
             return $this->avatar;
         }
 
-        $exists = Storage::disk('public')->exists($this->avatar)
-            || file_exists(public_path('storage/' . $this->avatar))
-            || file_exists(storage_path('app/public/' . $this->avatar));
-
-        if (!$exists) {
-            return null;
-        }
-
-        $timestamp = time();
-        try {
-            $timestamp = Storage::disk('public')->lastModified($this->avatar) ?: time();
-        } catch (\Throwable) {
-            // Fallback timestamp if disk driver throws
-        }
-
-        return asset('storage/' . $this->avatar) . '?v=' . $timestamp;
+        return asset('storage/' . ltrim($this->avatar, '/'));
     }
 
     /**

@@ -1,8 +1,26 @@
 <?php
 /**
  * LPK CPanel Deployment Helper
- * Akses melalui: https://domain-anda.com/install_helper.php?token=lpk_cpanel_2026
+ * Akses awal instalasi via: https://domain-anda.com/install_helper.php?token=lpk_cpanel_2026
  */
+
+$base_dir = dirname(__DIR__);
+
+// Keamanan Tingkat Tinggi: Otomatis kunci script ini jika file .env sudah aktif & terkonfigurasi
+if (file_exists($base_dir . '/.env')) {
+    $envContent = @file_get_contents($base_dir . '/.env');
+    // Jika sistem sudah memiliki konfigurasi database aktif, tolak akses publik langsung
+    if (str_contains($envContent, 'DB_DATABASE=') && !str_contains($envContent, 'DB_DATABASE=lpk_cpanel_placeholder')) {
+        http_response_code(403);
+        echo '<!DOCTYPE html><html><head><title>Access Forbidden</title><style>body{font-family:sans-serif;padding:40px;background:#f8fafc;color:#1e293b;}</style></head><body>';
+        echo '<h2>🔒 403 - Akses Dikunci Demi Keamanan</h2>';
+        echo '<p>Sistem LMS telah selesai dikonfigurasi dan aktif digunakan. Script inisialisasi ini telah dinonaktifkan secara otomatis demi melindungi server dari eksploitasi pihak luar.</p>';
+        echo '<p>Silakan hapus file <code>public/install_helper.php</code> dari File Manager cPanel.</p>';
+        echo '<a href="/" style="display:inline-block;padding:10px 18px;background:#0284c7;color:white;text-decoration:none;border-radius:6px;">Menuju Halaman Utama</a>';
+        echo '</body></html>';
+        exit;
+    }
+}
 
 $secret_token = 'lpk_cpanel_2026';
 

@@ -647,16 +647,34 @@ class QuestionDocxService
 
         $imageZipPath = $imageRels[$relId];
         $binaryData = $zip->getFromName($imageZipPath);
-        if ($binaryData === false) {
+        if ($binaryData === false || strlen($binaryData) < 8) {
             return null;
         }
 
-        $ext = pathinfo($imageZipPath, PATHINFO_EXTENSION);
-        if (empty($ext)) {
-            $ext = 'png';
+        $rawExt = strtolower(pathinfo($imageZipPath, PATHINFO_EXTENSION));
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        // Keamanan Ketat: Validasi signature binary gambar asli (Cegah RCE / Arbitrary PHP Upload)
+        $imageInfo = @getimagesizefromstring($binaryData);
+        if ($imageInfo === false) {
+            return null;
         }
 
-        $filename = 'docx_img_' . uniqid() . '.' . strtolower($ext);
+        $mimeToExt = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+        ];
+
+        $detectedMime = $imageInfo['mime'] ?? '';
+        $safeExt = $mimeToExt[$detectedMime] ?? (in_array($rawExt, $allowedExtensions) ? $rawExt : null);
+
+        if (!$safeExt) {
+            return null;
+        }
+
+        $filename = 'docx_img_' . uniqid() . '.' . $safeExt;
         $storageRelativePath = 'questions/images/' . $filename;
 
         Storage::disk('public')->put($storageRelativePath, $binaryData);

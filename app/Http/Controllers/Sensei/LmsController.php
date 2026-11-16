@@ -231,8 +231,8 @@ class LmsController extends Controller
                 'content_type' => 'required|in:text_grammar,video,pdf_handout,culture',
                 'content_body' => 'required|string',
                 'video_url' => 'nullable|string|max:255',
-                'image_file' => 'nullable',
-                'audio_file' => 'nullable',
+                'image_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+                'audio_file' => 'nullable|mimes:mp3,wav,ogg,m4a|max:10240',
                 'duration_minutes' => 'nullable|integer|min:1',
                 'is_published' => 'required|boolean',
             ]);
@@ -264,8 +264,8 @@ class LmsController extends Controller
                 'romaji' => 'nullable|string|max:100',
                 'meaning_id' => 'required|string|max:255',
                 'word_type' => 'required|string|max:50',
-                'image_file' => 'nullable',
-                'audio_file' => 'nullable',
+                'image_file' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+                'audio_file' => 'nullable|mimes:mp3,wav,ogg,m4a|max:10240',
                 'example_sentence_jp' => 'nullable|string',
                 'example_sentence_id' => 'nullable|string',
             ]);

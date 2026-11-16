@@ -327,26 +327,38 @@ class QuestionController extends Controller
 
         $sectionType = $validated['section_type'] ?? ($audioUrl ? 'choukai' : 'bunpou');
 
+        // Validasi: Wajib ada minimal satu kunci jawaban yang benar
+        $hasCorrectOption = false;
+        foreach ($validated['options'] as $opt) {
+            if (filter_var($opt['is_correct'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                $hasCorrectOption = true;
+                break;
+            }
+        }
+        if (!$hasCorrectOption) {
+            return redirect()->back()->withErrors(['options' => 'Paling sedikit satu pilihan jawaban harus ditandai sebagai kunci jawaban benar (○).']);
+        }
+
         DB::transaction(function () use ($validated, $questionBank, $imageUrl, $audioUrl, $sectionType) {
             $question = Question::create([
                 'created_by' => Auth::id(),
                 'question_category_id' => $validated['question_category_id'] ?? null,
                 'level' => $questionBank->level ?? 'N4',
                 'section_type' => $sectionType,
-                'question_text' => $validated['question_text'],
-                'instruction' => $validated['instruction'] ?? null,
-                'reading_passage' => $validated['reading_passage'] ?? null,
+                'question_text' => $this->sanitizeHtmlText($validated['question_text']),
+                'instruction' => $this->sanitizeHtmlText($validated['instruction'] ?? null),
+                'reading_passage' => $this->sanitizeHtmlText($validated['reading_passage'] ?? null),
                 'image_url' => $imageUrl,
                 'audio_url' => $audioUrl,
                 'score_points' => $validated['score_points'] ?? 1.0,
-                'explanation' => $validated['explanation'] ?? null,
+                'explanation' => $this->sanitizeHtmlText($validated['explanation'] ?? null),
             ]);
 
             foreach ($validated['options'] as $idx => $opt) {
                 QuestionOption::create([
                     'question_id' => $question->id,
                     'option_key' => chr(65 + $idx), // A, B, C, D...
-                    'option_text' => $opt['option_text'],
+                    'option_text' => $this->sanitizeHtmlText($opt['option_text']),
                     'is_correct' => filter_var($opt['is_correct'], FILTER_VALIDATE_BOOLEAN),
                 ]);
             }
@@ -411,13 +423,13 @@ class QuestionController extends Controller
 
         $sectionType = $validated['section_type'] ?? ($question->audio_url ? 'choukai' : ($question->section_type ?? 'bunpou'));
 
-        $question->question_text = $validated['question_text'];
+        $question->question_text = $this->sanitizeHtmlText($validated['question_text']);
         $question->section_type = $sectionType;
         $question->question_category_id = $validated['question_category_id'] ?? null;
-        $question->instruction = $validated['instruction'] ?? null;
-        $question->reading_passage = $validated['reading_passage'] ?? null;
+        $question->instruction = $this->sanitizeHtmlText($validated['instruction'] ?? null);
+        $question->reading_passage = $this->sanitizeHtmlText($validated['reading_passage'] ?? null);
         $question->score_points = $validated['score_points'] ?? 1.0;
-        $question->explanation = $validated['explanation'] ?? null;
+        $question->explanation = $this->sanitizeHtmlText($validated['explanation'] ?? null);
         $question->save();
 
         // Update pivot section_type
@@ -431,17 +443,48 @@ class QuestionController extends Controller
             ]);
         }
 
-        // Update / re-create options
+        // Update / sync opsi pilihan dengan aman tanpa menghapus seluruh record (Cegah CASCADE NULL pada exam_answers)
         DB::transaction(function () use ($validated, $question) {
-            $question->options()->delete();
-            foreach ($validated['options'] as $idx => $opt) {
-                QuestionOption::create([
-                    'question_id' => $question->id,
-                    'option_key' => chr(65 + $idx),
-                    'option_text' => $opt['option_text'],
-                    'is_correct' => filter_var($opt['is_correct'], FILTER_VALIDATE_BOOLEAN),
-                ]);
+            $existingOptions = $question->options()->orderBy('id', 'asc')->get();
+            $newOptionsData = array_values($validated['options']);
+            $usedOptionIds = [];
+
+            foreach ($newOptionsData as $idx => $opt) {
+                $optionKey = chr(65 + $idx);
+                $isCorrect = filter_var($opt['is_correct'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                $optionText = $opt['option_text'];
+
+                // 1. Cocokkan dengan ID eksplisit jika dikirim
+                $matchedOption = null;
+                if (!empty($opt['id'])) {
+                    $matchedOption = $existingOptions->firstWhere('id', (int) $opt['id']);
+                }
+
+                // 2. Jika tidak ada ID atau belum cocok, cocokkan berdasarkan indeks posisi lama
+                if (!$matchedOption && isset($existingOptions[$idx])) {
+                    $matchedOption = $existingOptions[$idx];
+                }
+
+                if ($matchedOption) {
+                    $matchedOption->update([
+                        'option_key' => $optionKey,
+                        'option_text' => $this->sanitizeHtmlText($optionText),
+                        'is_correct' => $isCorrect,
+                    ]);
+                    $usedOptionIds[] = $matchedOption->id;
+                } else {
+                    $created = QuestionOption::create([
+                        'question_id' => $question->id,
+                        'option_key' => $optionKey,
+                        'option_text' => $this->sanitizeHtmlText($optionText),
+                        'is_correct' => $isCorrect,
+                    ]);
+                    $usedOptionIds[] = $created->id;
+                }
             }
+
+            // Hapus hanya opsi lama yang tidak lagi terpakai (jika opsi dikurangi)
+            $question->options()->whereNotIn('id', $usedOptionIds)->delete();
         });
 
         Cache::forget("cbt_qb_questions_{$questionBank->id}");
@@ -623,5 +666,21 @@ class QuestionController extends Controller
     public function create(): RedirectResponse
     {
         return redirect()->route('sensei.questions.index');
+    }
+
+    /**
+     * Sanitize rich HTML text allowing only safe furigana and typography tags (Anti-XSS).
+     */
+    private function sanitizeHtmlText(?string $html): ?string
+    {
+        if ($html === null) {
+            return null;
+        }
+
+        $allowedTags = '<ruby><rb><rt><rp><b><i><u><strong><em><span><p><br><div>';
+        $cleaned = strip_tags($html, $allowedTags);
+
+        // Hapus event handlers (onload, onerror, onclick, dll) jika ada di tag yang lolos
+        return preg_replace('/\s*on\w+\s*=\s*(["\']).*?\1/i', '', $cleaned);
     }
 }

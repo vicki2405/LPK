@@ -106,7 +106,11 @@ class SenseiController extends Controller
 
     public function resetPassword(Request $request, User $sensei): RedirectResponse
     {
-        $newPassword = $request->input('password', 'password');
+        $validated = $request->validate([
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $newPassword = !empty($validated['password']) ? $validated['password'] : 'password';
         $sensei->update(['password' => Hash::make($newPassword)]);
 
         return redirect()->back()->with('success', "Password Sensei {$sensei->name} berhasil direset!");

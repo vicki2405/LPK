@@ -33,8 +33,13 @@ class LmsController extends Controller
     /**
      * Display full-page reader for a single chapter.
      */
-    public function show(Chapter $chapter): Response
+    public function show(Chapter $chapter, Request $request): Response
     {
+        $user = $request->user();
+        if (!$chapter->is_published && !$user?->hasAnyRole(['admin', 'sensei'])) {
+            abort(404, 'Materi bab ini belum diterbitkan oleh Sensei.');
+        }
+
         $chapter->load(['course', 'learningIndicators', 'lessons' => fn($q) => $q->where('is_published', true)->orderBy('order_index')]);
         $chapter->loadCount('vocabularies');
 

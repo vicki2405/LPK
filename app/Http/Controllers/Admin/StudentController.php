@@ -160,7 +160,11 @@ class StudentController extends Controller
      */
     public function resetPassword(Request $request, User $student): RedirectResponse
     {
-        $newPassword = $request->input('password', 'password');
+        $validated = $request->validate([
+            'password' => 'nullable|string|min:6',
+        ]);
+
+        $newPassword = !empty($validated['password']) ? $validated['password'] : 'password';
         $student->update(['password' => Hash::make($newPassword)]);
 
         return redirect()->back()->with('success', "Kata sandi siswa {$student->name} berhasil direset!");
