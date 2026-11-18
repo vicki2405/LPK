@@ -368,6 +368,7 @@ CREATE TABLE `exam_sessions` (
   PRIMARY KEY (`id`),
   KEY `exam_sessions_exam_id_foreign` (`exam_id`),
   KEY `exam_sessions_user_id_exam_id_status_index` (`user_id`,`exam_id`,`status`),
+  KEY `exam_sessions_exam_score_sub_idx` (`exam_id`,`total_score`,`submitted_at`),
   CONSTRAINT `exam_sessions_exam_id_foreign` FOREIGN KEY (`exam_id`) REFERENCES `exams` (`id`) ON DELETE CASCADE,
   CONSTRAINT `exam_sessions_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

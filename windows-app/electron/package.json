@@ -1,0 +1,38 @@
+{
+  "name": "masayume-lms-desktop",
+  "version": "1.0.0",
+  "description": "Aplikasi Desktop Windows MASAYUME - Sistem LMS & CBT Terpadu LPK Penyaluran Jepang",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64"
+  },
+  "keywords": [
+    "lms",
+    "cbt",
+    "masayume",
+    "desktop",
+    "windows"
+  ],
+  "author": "LPK Masayume",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "id.masayume.lms.desktop",
+    "productName": "MASAYUME LMS & CBT",
+    "win": {
+      "target": "nsis",
+      "icon": "../app.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MASAYUME LMS & CBT"
+    }
+  }
+}
